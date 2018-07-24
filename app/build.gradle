@@ -39,11 +39,8 @@ dependencies {
 //        implementation 'org.apache.httpcomponents:httpclient-android:4.3.5.1'
     //    implementation 'com.alibaba:fastjson:1.2.47'
     //    implementation 'net.sourceforge.nekohtml:nekohtml:1.9.22'
-
-//    implementation files('D:/worksrc/AndroidStudioProjects/Test1/libs/commons-codec-1.9.jar')
-//    implementation files('D:/worksrc/AndroidStudioProjects/Test1/libs/commons-logging-1.2.jar')
-//    implementation files('D:/worksrc/AndroidStudioProjects/Test1/libs/httpclient-4.5.1.jar')
-//    implementation files('D:/worksrc/AndroidStudioProjects/Test1/libs/httpcore-4.4.3.jar')
+	//    implementation 'cz.msebera.android:httpclient:4.4.1.2'  //https://github.com/smarek/httpclient-android
+	
     implementation files('libs/httpclient-4.4.1.2.jar')
     implementation files('libs/fastjson-1.2.47.jar')
     implementation files('libs/nekohtml-1.9.22.jar')

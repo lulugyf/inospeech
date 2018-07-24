@@ -16,13 +16,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-//import org.apache.http.Consts;
-//import org.apache.http.client.methods.CloseableHttpResponse;
-//import org.apache.http.client.protocol.HttpClientContext;
-//import org.apache.http.client.utils.URIBuilder;
-//import org.apache.http.impl.client.CloseableHttpClient;
-//import org.apache.http.impl.client.HttpClients;
-//import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
+// https://github.com/smarek/httpclient-android
 
 import cz.msebera.android.httpclient.Consts;
 import cz.msebera.android.httpclient.Header;
