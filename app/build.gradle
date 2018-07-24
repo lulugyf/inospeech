@@ -1,0 +1,52 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion "27.0.3"
+    defaultConfig {
+        applicationId "com.laog.test1"
+        minSdkVersion 22
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+    }
+}
+
+
+
+dependencies {
+    //    repositories {
+    //        mavenCentral()
+    //        maven {
+    //            url "http://172.21.10.40:9092/nexus/content/repositories/central"
+    //        }
+    //    }
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+//        implementation 'org.apache.httpcomponents:httpclient-android:4.3.5.1'
+    //    implementation 'com.alibaba:fastjson:1.2.47'
+    //    implementation 'net.sourceforge.nekohtml:nekohtml:1.9.22'
+
+//    implementation files('D:/worksrc/AndroidStudioProjects/Test1/libs/commons-codec-1.9.jar')
+//    implementation files('D:/worksrc/AndroidStudioProjects/Test1/libs/commons-logging-1.2.jar')
+//    implementation files('D:/worksrc/AndroidStudioProjects/Test1/libs/httpclient-4.5.1.jar')
+//    implementation files('D:/worksrc/AndroidStudioProjects/Test1/libs/httpcore-4.4.3.jar')
+    implementation files('libs/httpclient-4.4.1.2.jar')
+    implementation files('libs/fastjson-1.2.47.jar')
+    implementation files('libs/nekohtml-1.9.22.jar')
+    implementation files('libs/xercesImpl-2.11.0.jar')
+    implementation files('libs/xml-apis-1.4.01.jar')
+}

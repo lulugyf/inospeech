@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">InoSpeech</string>
+    <string name="str_back"><![CDATA[<<]]></string>
+    <string name="str_forward"><![CDATA[>>]]></string>
+    <string name="str_stop">Stop</string>
+    <string name="str_down">Fetch</string>
+    <string name="edit_speed">Speech Rate</string>
+    <string name="bt_spdup"><![CDATA[>]]></string>
+    <string name="bt_spddown"><![CDATA[<]]></string>
+    <string name="str_start">Read</string>
+</resources>

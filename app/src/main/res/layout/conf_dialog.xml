@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" >
+
+    <ImageView
+        android:id="@+id/dialog_image"
+        android:layout_width="115dp"
+        android:layout_height="106dp"
+        android:layout_marginRight="5dp" />
+
+    <TextView
+        android:id="@+id/dialog_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/dialog_image"
+        android:textColor="#FFF" />/>
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dialog_image"
+        android:layout_marginTop="40dp"
+        android:layout_alignParentLeft="true" />
+
+    <Button
+        android:id="@+id/dialogButtonOK"
+        android:layout_width="96dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/seekBar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:text=" Ok " />
+
+
+</RelativeLayout>
