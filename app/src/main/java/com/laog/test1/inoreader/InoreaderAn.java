@@ -1,19 +1,14 @@
 package com.laog.test1.inoreader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.net.CookieStore;
-import java.net.HttpCookie;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 // https://github.com/smarek/httpclient-android
@@ -21,6 +16,7 @@ import java.util.List;
 import cz.msebera.android.httpclient.Consts;
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpEntity;
+import cz.msebera.android.httpclient.HttpHost;
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.NameValuePair;
 import cz.msebera.android.httpclient.client.entity.UrlEncodedFormEntity;
@@ -33,13 +29,14 @@ import cz.msebera.android.httpclient.cookie.CookieOrigin;
 import cz.msebera.android.httpclient.impl.client.BasicCookieStore;
 import cz.msebera.android.httpclient.impl.client.CloseableHttpClient;
 import cz.msebera.android.httpclient.impl.client.HttpClients;
+import cz.msebera.android.httpclient.impl.conn.DefaultProxyRoutePlanner;
 import cz.msebera.android.httpclient.impl.cookie.BasicClientCookie;
 import cz.msebera.android.httpclient.impl.cookie.DefaultCookieSpec;
 import cz.msebera.android.httpclient.message.BasicNameValuePair;
 import cz.msebera.android.httpclient.util.EntityUtils;
 
 
-public class Inoreader {
+public class InoreaderAn {
 	private static String start_url = "https://www.inoreader.com/";
 //	private HttpClientContext context;
 	private CloseableHttpClient httpclient;
@@ -57,14 +54,18 @@ public class Inoreader {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Inoreader n = new Inoreader("/tmp");
+		InoreaderAn n = new InoreaderAn("/tmp", true);
 		n.start();
-		n.fetch();
-		n.fetch();
-//		log(System.currentTimeMillis());
+		List<Article> la = new LinkedList<Article>(), l1;
+		la.addAll( n.fetch()  );
+		la.addAll( n.fetch()  );
+		la.addAll( n.fetch()  );
+		for(Article a: la) {
+			log("==="+a.title);
+		}
 	}
 
-	public Inoreader(String rootdir) {
+	public InoreaderAn(String rootdir, boolean useProxy) {
 		this.rootDir = rootdir;
 		File f = new File(rootDir);
 		if(!f.exists()){
@@ -75,7 +76,7 @@ public class Inoreader {
 		f = new File(tmpDir);
 		if(!f.exists() ) f.mkdirs();
 
-		buildClient(false);
+		buildClient(useProxy);
 		try {
 			restoreCookie();
 		}catch(Exception ex){
@@ -87,35 +88,16 @@ public class Inoreader {
 
 		String content = get(start_url, null);
 		if(content != null && content.indexOf("landing_signin") > 0) {  //未登录的首页内容中， 有下面这个
-			// <div class="pull_left" id="landing_signin">
-//<a href="javascript:void(0);" id="login_air" class="underlink_hover">Sign in</a>
-//</div>
 			login();
 		}
-		//get(start_url, null, "index_2");
-
-
-//		getIndex();
-//		login();
-//	//	step3();
-//		step4();
-
-//		m_first();
-//		m_old("");
-		// https://www.inoreader.com/m/ajax.php?ajax=1&mark_read=16577750434&force_read=1  // 标记已经读过
-		// POST https://www.inoreader.com/m/ajax.php?list_articles=1&ajax=1
-		//      seen_ids: 16577128332,16575866313,...        //加载更旧的标题
-
-//		printCookie();
-
 		saveCookie();
 	}
 
 	public List<Article> fetch() throws Exception{
 	    if(seen_ids != null) {
-	        return m_old();
+	        return fetch_old();
         }else
-            return m_first();
+            return fetch_first();
     }
     public List<Article> initLoadFile() throws Exception {
 		String fpath = realPath(save_file);
@@ -128,47 +110,38 @@ public class Inoreader {
 		log("initLoadFile "+fpath+" article size="+la.size());
 		return la;
 	}
-
-	public List<Article> m_old() throws Exception {
-		// extract seen_ids from file
-//		String content = Utils.fileToString("mcontent.js.1", null);
-//		List<Article> la = JsonUtil.extractArticles(content);
-//		seen_ids = JsonUtil.seen_ids;
-
+	private List<Article> fetch_old() throws Exception {
+		return fetch_old(null);
+	}
+	private List<Article> fetch_old(String f) throws Exception {
 		HttpPost post = new HttpPost("https://www.inoreader.com/m/ajax.php?list_articles=1&ajax=1");
 		addDefHeaders(post);
 		post.addHeader("referer", "https://www.inoreader.com/m/?list_articles=1");
 		List<NameValuePair> formparams = new ArrayList<NameValuePair>();
 		formparams.add(new BasicNameValuePair("seen_ids", seen_ids));
+		log("==fetch_old "+post.getURI() + " seen_ids:"+seen_ids);
 		UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formparams, Consts.UTF_8);
 		post.setEntity(entity);
 
 		CloseableHttpResponse resp = httpclient.execute(post);
-		saveResp(resp, "m_old.json");
-
-		List<Article> la = JsonUtil.extractArticles(Utils.fileToString(realPath("m_old.json"), null));
+		String content = EntityUtils.toString(resp.getEntity());
+		List<Article> la = JsonUtil.extractArticles(content);
+		if(f != null)
+			Utils.stringToFile(realPath(f), content);
+//		saveResp(resp, "m_old.json");
+//		List<Article> la = JsonUtil.extractArticles(Utils.fileToString(realPath("m_old.json")));
         this.seen_ids = JsonUtil.seen_ids;
         return la;
-//        StringBuilder sb = new StringBuilder();
-//
-//		for(Article a: la) {
-//			sb.append("====" + a.id + ":" + a.title);
-//			//Utils.log(a.href);
-//			sb.append(a.content);
-//			sb.append("\n\n");
-//		}
-//		return sb.toString();
 	}
 
-//	private String filePath;
-//	public String getFilePath() { return filePath; }
 	final String save_file = "mcontent.js";
-	public List<Article> m_first() throws Exception {
+	private List<Article> fetch_first() throws Exception {
+		return fetch_first(null);
+	}
+	private List<Article> fetch_first(String f) throws Exception {
 		String murl = "https://www.inoreader.com/m/";
 		String url = "https://www.inoreader.com/m/?list_articles=1";
 		String content = get(url, murl);
-
-
 
 		StringBuilder sb = new StringBuilder();
 
@@ -176,51 +149,17 @@ public class Inoreader {
 		if(p1 > 0) {
 			int p2 = content.indexOf("\"", p1+10);
 			String loc = content.substring(p1, p2);
-			log("=====loc:"+loc);
-			get(loc, url, save_file);
-			log("===get done!");
-			List<Article> la = JsonUtil.extractArticles(Utils.fileToString(realPath(save_file), null));
+			log("=====fetch_first loc:"+loc);
+			content = get(loc, url);
+			//get(loc, url, save_file);
+			List<Article> la = JsonUtil.extractArticles(content);
+			if(f != null)
+				Utils.stringToFile(realPath(f), content);
             this.seen_ids = JsonUtil.seen_ids;
 			return la;
-//			Utils.log("seen_ids: "+JsonUtil.seen_ids);
-//
-//			for(Article a: la) {
-//				sb.append("====" + a.id + ":" + a.title);
-//				//Utils.log(a.href);
-//				sb.append(a.content);
-//				sb.append("\n\n");
-//			}
 		}
 		return null;
-//		return sb.toString();
 	}
-
-
-
-//	public void step4() throws Exception {
-//		log("----step4");
-//		List<NameValuePair> formparams = new ArrayList<NameValuePair>();
-//		formparams.add(new BasicNameValuePair("xjxfun", "print_articles"));
-//		formparams.add(new BasicNameValuePair("xjxr", String.valueOf(System.currentTimeMillis())));
-//		formparams.add(new BasicNameValuePair("xjxargs[]", "Bfalse"));
-//		formparams.add(new BasicNameValuePair("xjxargs[]", "N0"));
-//		formparams.add(new BasicNameValuePair("xjxargs[]", "{\"articles_order\":0,\"view_style\":1,\"global_articles_order\":0}"));
-//		UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formparams, Consts.UTF_8);
-//		URI uri = new URI(start_url);
-//		HttpPost post = new HttpPost(uri);
-//		post.setEntity(entity);
-//
-//		CloseableHttpResponse resp = httpclient.execute(post);
-//		printResp(resp);
-//		if(resp.getStatusLine().getStatusCode() == 200) {
-//			parseCookie(resp, post.getURI());
-//		}
-//		saveResp(resp, "step4");
-//	}
-//
-//	public void step3() throws Exception {
-//		get(start_url, start_url, "step3");
-//	}
 
 	public void login() throws Exception {
 		log("----login");
@@ -348,11 +287,11 @@ public class Inoreader {
 //	}
 
 	private void buildClient(boolean useProxy) {
-//		DefaultProxyRoutePlanner routePlanner = null;
-//		if(useProxy) {
-//			HttpHost proxy = new HttpHost("172.22.0.23", 8989);
-//			routePlanner = new DefaultProxyRoutePlanner(proxy);
-//		}
+		DefaultProxyRoutePlanner routePlanner = null;
+		if(useProxy) {
+			HttpHost proxy = new HttpHost("172.22.0.23", 8989);
+			routePlanner = new DefaultProxyRoutePlanner(proxy);
+		}
 
 //		Lookup<CookieSpecProvider> cookieSpecReg = RegistryBuilder.<CookieSpecProvider>create().build();
 
@@ -362,7 +301,7 @@ public class Inoreader {
 //		context.setCookieStore(cookieStore);
 
 		httpclient = HttpClients.custom()
-//				.setRoutePlanner(routePlanner)
+				.setRoutePlanner(routePlanner)
 				.setDefaultCookieStore(cookieStore)
 				.build();
 //		return httpclient;

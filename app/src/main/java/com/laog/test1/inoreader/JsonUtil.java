@@ -2,6 +2,7 @@ package com.laog.test1.inoreader;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -14,18 +15,19 @@ import com.alibaba.fastjson.parser.DefaultJSONParser;
 
 public class JsonUtil {
 	public static void main(String[] args) throws Exception {
-//		String content = Utils.fileToString("m_old.json", null);
-		String content = Utils.fileToString("mcontent.js.1", null);
+		String content = Utils.fileToString("/tmp/tmp/m_old.json", null);
+//		String content = Utils.fileToString("/tmp/tmp/mcontent.js", null);
 		
 		List<Article> la = extractArticles(content);
 		Utils.log("seen_ids: "+JsonUtil.seen_ids);
 		for(Article a: la) {
-			Utils.log("====" + a.id + ":" + a.title);
-	    	Utils.log(a.href);
-	    	Utils.log(a.content);
+			Utils.log("====" + a.id + ":" + a.title + " " + a.author);
+//	    	Utils.log(a.href);
+//	    	Utils.log(a.content);
 		}
+		Utils.log(System.currentTimeMillis());
 	}
-	public static void main1(String[] args) throws Exception {
+	public static void testRegex() throws Exception {
 		String content = "<div dir=\"ltr\"><a style=\"text-decoration:none;font-weight:bold;font-size:1.1em;\" class=\"bluelink\" target=\"_blank\" rel=\"noopener\" href=\"https://botanwang.com/articles/201807/%E4%BB%A5%E8%89%B2%E5%88%97%E9%80%9A%E8%BF%87%E6%B0%91%E6%97%8F%E5%9B%BD%E5%AE%B6%E6%B3%95%E5%94%AF%E7%8A%B9%E5%A4%AA%E4%BA%BA%E5%8F%AF%E4%BA%AB%E8%87%AA%E6%B2%BB%E6%9D%83.html\">以色列通过民族国家法唯犹太人可享自治权</a> <div class=\"article_author\">发表于 12:43 由  <span style=\"font-style:italic\">daying</span> 通过 <a class=\"bluelink boldlink\" style=\"font-style:normal !important;text-decoration:none !important;\" href=\"?list_articles=1&filter_type=subscription&filter_id=22541990\">博谈网</a> </div></div><div id=\"article_contents_inner_16573942101\" class=\"article_content\"><div><div>来源:?</div><div><div>美国之音</div></div></div><div><div><div><p>以色列议会星期四通过一项有高度争议的法律。根据新通过的法律，只有以色列的犹太人才享有自治权，并鼓励建立犹太人定居点。</p> ";
 		Pattern r = Pattern.compile("<a style=\".+href=\"([^\"]+)\"");
 		Matcher m = r.matcher(content);
@@ -79,12 +81,11 @@ public class JsonUtil {
 		JSONObject jo = JSON.parseObject(json_cont);
 		for(String k: jo.keySet()) {
 			String v = jo.getString(k);
-			if("16575474001".equals(k))
-				Utils.stringToFile("v.js", v, null);
-			Article a = new Article(v);
-			a.id = k;
+			Article a = new Article(v, k);
 			ret.add(a);
 		}
+		//Collections.reverse(ret);
+        Collections.sort(ret);
 		return ret;
 	}
 	

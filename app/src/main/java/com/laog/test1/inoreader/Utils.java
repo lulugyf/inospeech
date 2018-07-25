@@ -11,6 +11,9 @@ import java.io.Reader;
 import java.io.Writer;
 
 public class Utils {
+	public static String fileToString(String fname) throws Exception {
+		return fileToString(fname, "UTF-8");
+	}
 	public static String fileToString(String fname, String charset) throws Exception {
 		InputStream instream = new FileInputStream(fname);
 		if(charset == null)
@@ -24,10 +27,11 @@ public class Utils {
         }
         return buffer.toString();
 	}
-	
+
+	public static void stringToFile(String fname, String content) throws Exception {
+		stringToFile(fname, content, "UTF-8");
+	}
 	public static void stringToFile(String fname, String content, String charset) throws Exception {
-		if(!fname.startsWith("tmp/"))
-			fname = "tmp/"+fname;
 		final OutputStream outstream = new FileOutputStream(fname);
 		try {
 			if(charset == null)

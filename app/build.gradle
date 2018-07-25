@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 26
@@ -36,7 +37,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-//        implementation 'org.apache.httpcomponents:httpclient-android:4.3.5.1'
+
     //    implementation 'com.alibaba:fastjson:1.2.47'
     //    implementation 'net.sourceforge.nekohtml:nekohtml:1.9.22'
 	//    implementation 'cz.msebera.android:httpclient:4.4.1.2'  //https://github.com/smarek/httpclient-android
@@ -46,4 +47,8 @@ dependencies {
     implementation files('libs/nekohtml-1.9.22.jar')
     implementation files('libs/xercesImpl-2.11.0.jar')
     implementation files('libs/xml-apis-1.4.01.jar')
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+repositories {
+    mavenCentral()
 }
