@@ -1,6 +1,9 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+// compileSdkVersion 28
+// buildToolsVersion "28.0.1"
+
 android {
     compileSdkVersion 26
     buildToolsVersion "27.0.3"
@@ -47,7 +50,7 @@ dependencies {
     implementation files('libs/nekohtml-1.9.22.jar')
     implementation files('libs/xercesImpl-2.11.0.jar')
     implementation files('libs/xml-apis-1.4.01.jar')
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 repositories {
     mavenCentral()

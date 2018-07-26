@@ -14,6 +14,7 @@ import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.widget.Button
 import android.view.View
+import android.view.Window
 
 import java.util.LinkedList
 import java.util.Locale
@@ -55,6 +56,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.activity_main)
 
         ed1 = findViewById<View>(R.id.textView2) as TextView
@@ -103,6 +105,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         myReceiver = ReceiveMessages()
         task = FetchTask()
         //task.initLoad();
+
+
     }
 
     /* Checks if external storage is available for read and write */
