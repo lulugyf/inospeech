@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
-// compileSdkVersion 28
-// buildToolsVersion "28.0.1"
+// compileSdkVersion 28   26
+// buildToolsVersion "28.0.1"    "27.0.3"
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "27.0.3"
+    compileSdkVersion 28
+    buildToolsVersion "28.0.1"
     defaultConfig {
         applicationId "com.laog.test1"
         minSdkVersion 22
