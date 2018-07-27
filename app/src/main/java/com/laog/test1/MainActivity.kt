@@ -103,10 +103,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         ed1!!.text = rootdir
 
         myReceiver = ReceiveMessages()
-        task = FetchTask()
-        //task.initLoad();
-
-
     }
 
     /* Checks if external storage is available for read and write */
@@ -137,10 +133,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             } else {
                 isInit = true
             }
-
-            //tts.setSpeechRate(2.0f);
-            if (task != null)
-                task!!.initLoad()
+            task = FetchTask(true)
+            task!!.execute(null as Void?)
         }
     }
 
@@ -180,29 +174,21 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
         override fun onDone(utteranceId: String) {
 //            Log.d("", "speak done!")
-            if (task != null)
-                task!!.next()
+            if (task != null) {
+                val ret = task!!.next()
+                if(! ret)
+                    reading = false;
+            }
         }
         override fun onError(utteranceId: String) {}
     }
 
 
-    private inner class FetchTask : AsyncTask<Void, Void, Boolean>() {
+    private inner class FetchTask(val loadFile: Boolean=false) : AsyncTask<Void, Void, Boolean>() {
         var content: String? = null
         var la: List<Article>? = null
         var idx: Int = 0
         private val ll = LinkedList<String>()
-
-        internal fun initLoad() {
-            try {
-                la = inoreader!!.initLoadFile()
-                if (la == null)
-                    return
-                onPostExecute(true)
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-            }
-        }
 
         fun back() {
             if (la == null) return
@@ -213,7 +199,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 tts!!.stop()
             next()
         }
-
         fun forward() {
             if (la == null) return
             if (idx >= la!!.size) return
@@ -222,7 +207,6 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 tts!!.stop()
             next()
         }
-
         fun read_or_stop() {
             if (reading) {
                 if (tts!!.isSpeaking)
@@ -235,16 +219,15 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 next()
             }
         }
-
         /**
          * 一段读完后自动转为下一段
          */
-        operator fun next() {
+        operator fun next(): Boolean {
             if (ll.size > 0 && reading ) {
                 tts!!.speak(ll.removeFirst(), TextToSpeech.QUEUE_FLUSH, null, "p")
             } else {
                 if (la == null || idx < 0 || idx >= la!!.size)
-                    return
+                    return false;
                 val art = la!![idx]
                 idx += 1
 
@@ -266,12 +249,17 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                     tts!!.speak(ll.removeFirst(), TextToSpeech.QUEUE_FLUSH, null, "p")
                 }
             }
+            return true;
         }
 
         override fun doInBackground(vararg voids: Void): Boolean? {
             try {
-                inoreader!!.start()
-                la = inoreader!!.fetch()
+                if(loadFile) {
+                    la = inoreader!!.initLoadFile()
+                }else {
+                    inoreader!!.start()
+                    la = inoreader!!.fetch()
+                }
             } catch (ex: Exception) {
                 content = ex.message
             }
