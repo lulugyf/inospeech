@@ -1,6 +1,7 @@
 package com.laog.test1
 
 import android.app.Activity
+import android.arch.persistence.room.Room
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -21,10 +22,14 @@ import java.util.Locale
 
 import android.widget.TextView
 import android.widget.Toast
+import com.laog.test1.db.AppDatabase
+import com.laog.test1.db.FeedItem
 
 import com.laog.test1.inoreader.Article
+import com.laog.test1.inoreader.InoApi
 import com.laog.test1.inoreader.InoreaderAn
 import com.laog.test1.inoreader.Utils
+import kotlin.math.max
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
@@ -39,20 +44,15 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private var inoreader: InoreaderAn? = null
     private var isInit = false
-    private var task: FetchTask? = null
+    private var task: FeedsBundle? = null
     private var reading = false
 
     private val message_type = "gyf.laog.test.SHOW_CONTENT"
     private var myReceiver: ReceiveMessages? = null
     private var myReceiverIsRegistered: Boolean? = false
 
-    override fun onDestroy() {
-        if (tts!!.isSpeaking)
-            tts!!.stop()
-        tts!!.shutdown()
-        Log.d("", "destroy, tts shutdown!")
-        super.onDestroy()
-    }
+    private var db: AppDatabase? = null
+    private var inoApi: InoApi? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,8 +79,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         bt2!!.setOnClickListener {
             bt2!!.isEnabled = false
             ed2!!.text = "Downloading..."
-            task = FetchTask()
-            task!!.execute(null as Void?)
+            //task = FetchTask()
+            task!!.download()
         }
         (findViewById<View>(R.id.button_back) as Button).setOnClickListener { if (task != null) task!!.back() }
         (findViewById<View>(R.id.button_forward) as Button).setOnClickListener { if (task != null) task!!.forward() }
@@ -133,8 +133,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             } else {
                 isInit = true
             }
-            task = FetchTask(true)
-            task!!.execute(null as Void?)
+            task = FeedsBundle()
+            FetchTask(0).execute()
         }
     }
 
@@ -155,15 +155,25 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
+    override fun onDestroy() {
+        if (tts!!.isSpeaking)
+            tts!!.stop()
+        tts!!.shutdown()
+        Log.d("", "destroy, tts shutdown!")
+        if(db != null)
+            db!!.close()
+        super.onDestroy()
+    }
+
     private inner class ReceiveMessages : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
             if (action!!.equals(message_type)) {
-                if(task == null || task!!.la == null)
+                if(task == null || task!!.lf == null)
                     return;
                 ed2!!.text = task!!.content
                 ed2!!.scrollTo(0, 0)
-                ed1!!.text = task!!.idx.toString() + " / " + task!!.la!!.size
+                ed1!!.text = task!!.indicate()
             }
         }
     }
@@ -184,14 +194,15 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
 
-    private inner class FetchTask(val loadFile: Boolean=false) : AsyncTask<Void, Void, Boolean>() {
+    private inner class FeedsBundle{
         var content: String? = null
-        var la: List<Article>? = null
+        var lf: List<FeedItem>? = null
         var idx: Int = 0
         private val ll = LinkedList<String>()
+        var pageidx = 0
 
         fun back() {
-            if (la == null) return
+            if (lf == null) return
             if (idx <= 1) return
             ll.clear()
             idx -= 2
@@ -200,12 +211,16 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             next()
         }
         fun forward() {
-            if (la == null) return
-            if (idx >= la!!.size) return
+            if (lf == null) return
+            //if (idx >= lf!!.size) return
             ll.clear()
             if (tts!!.isSpeaking)
                 tts!!.stop()
             next()
+        }
+
+        fun indicate(): String {
+            return idx.toString() + " / " + task!!.lf!!.size + "  " + pageidx
         }
         fun read_or_stop() {
             if (reading) {
@@ -226,20 +241,23 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             if (ll.size > 0 && reading ) {
                 tts!!.speak(ll.removeFirst(), TextToSpeech.QUEUE_FLUSH, null, "p")
             } else {
-                if (la == null || idx < 0 || idx >= la!!.size)
+                if (lf == null || idx < 0)
                     return false;
-                val art = la!![idx]
+                if( idx >= lf!!.size ) {
+                    FetchTask(1).execute()
+                    pageidx += 1
+                    return true
+                }
+                val art = lf!![idx]
                 idx += 1
 
                 speed = java.lang.Float.parseFloat(edSpeed!!.text.toString())
-                tts!!.setSpeechRate(speed)
-//                Utils.log("=========speechRate= $speed")
 
-                content = art.title + "\n\n" + art.author + "\n\n" + art.content
+                content = art.title + "\n\n" + art.author + " " + art.s_published +"\n\n" + art.content
                 val i = Intent(message_type)
                 ed2!!.context.sendBroadcast(i)
-                Log.d("", "article: "+art.id + " " + art.title)
-                ll.clear();
+                Log.d("", "article: "+art.s_published + " " + art.title)
+                ll.clear()
                 ll.add("标题")
                 ll.add(art.title)
                 ll.add(art.author)
@@ -249,28 +267,55 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                     tts!!.speak(ll.removeFirst(), TextToSpeech.QUEUE_FLUSH, null, "p")
                 }
             }
-            return true;
+            return true
         }
+        fun download(): Unit {
+            FetchTask(2).execute()
+            pageidx = 0
+        }
+
+        fun loaded(v: List<FeedItem>) {
+            idx = 0
+            lf = v
+            next()
+        }
+    }
+
+
+    /**
+     * act:  0-- first load 1-- load-old  2-- download
+     */
+    private inner class FetchTask(val act: Int=0) : AsyncTask<Void, Void, Boolean>() {
+        private var lf: List<FeedItem>? = null
+        private var content: String? = null
 
         override fun doInBackground(vararg voids: Void): Boolean? {
             try {
-                if(loadFile) {
-                    la = inoreader!!.initLoadFile()
+                if(act == 0) {
+                    if (db == null)
+                        db = Room.databaseBuilder(applicationContext,
+                                AppDatabase::class.java, "inofeeds").build()
+                    if (inoApi == null)
+                        inoApi = InoApi(filesDir.absolutePath, db!!.feedItemDao(), false)
+                    lf = inoApi!!.loadnew()
+                }else if(act == 1){
+                    lf = inoApi!!.loadold()
                 }else {
-                    inoreader!!.start()
-                    la = inoreader!!.fetch()
+                    inoApi!!.download()
+                    lf = inoApi!!.loadnew()
                 }
             } catch (ex: Exception) {
                 content = ex.message
+                ex.printStackTrace()
             }
 
-            return if (la == null) false else true
+            return if (lf == null) false else true
         }
+
 
         override fun onPostExecute(success: Boolean?) {
             if (success!!) {
-                idx = 0
-                next()
+                task!!.loaded(lf!!)
             } else {
                 Toast.makeText(this@MainActivity,
                         "failed",
@@ -278,6 +323,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 ed2!!.text = content
             }
             bt2!!.isEnabled = true
+
         }
+    }
+
+    fun toast(msg: String?): Unit {
+        Toast.makeText(this@MainActivity,
+                msg,
+                Toast.LENGTH_LONG).show()
     }
 }

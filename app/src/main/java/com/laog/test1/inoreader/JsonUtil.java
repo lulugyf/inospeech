@@ -2,7 +2,10 @@ package com.laog.test1.inoreader;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -12,6 +15,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.parser.DefaultJSONParser;
+import com.laog.test1.db.FeedItem;
+
+import org.cyberneko.html.parsers.DOMParser;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 public class JsonUtil {
 	public static void main(String[] args) throws Exception {
@@ -113,5 +123,29 @@ public class JsonUtil {
 	
 	private static void log(Object msg) {
 		System.out.println(msg);
+	}
+
+
+	private String continuation= null;
+	public String getC() {
+		return continuation;
+	}
+	public List<FeedItem> parseStream(String content) throws Exception {
+		continuation = null;
+		JSONObject jo = JSON.parseObject(content);
+		JSONArray ja = jo.getJSONArray("items");
+		if(ja.size() == 0)
+			return null;
+		List<FeedItem> lst = new LinkedList<>();
+		for(int i=0; i<ja.size(); i++) {
+			JSONObject j = ja.getJSONObject(i);
+//			log("------------------"+i);
+			lst.add(FeedItem.fromJSON(j));
+		}
+		if(jo.containsKey("continuation")) {
+			log("continuation: " + jo.getString("continuation"));
+			continuation = jo.getString("continuation");
+		}
+		return lst;
 	}
 }
