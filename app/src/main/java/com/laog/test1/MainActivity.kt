@@ -150,6 +150,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             registerReceiver(myReceiver, IntentFilter(message_type))
             myReceiverIsRegistered = true
         }
+        myReceiver!!.onReceive(this, Intent(message_type));
     }
 
     override fun onPause() {
@@ -164,6 +165,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
             if (action!!.equals(message_type)) {
+                if(task == null || task!!.la == null)
+                    return;
                 ed2!!.text = task!!.content
                 ed2!!.scrollTo(0, 0)
                 ed1!!.text = task!!.idx.toString() + " / " + task!!.la!!.size

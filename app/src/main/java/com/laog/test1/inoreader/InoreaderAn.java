@@ -93,26 +93,38 @@ public class InoreaderAn {
 		saveCookie();
 	}
 
+	private int file_idx = 0;
+	private int file_idx_read = 0;
 	public List<Article> fetch() throws Exception{
 	    if(seen_ids != null) {
-	        return fetch_old();
+	        return fetch_old("content_"+(file_idx++));
         }else
-            return fetch_first();
+            return fetch_first("content_"+(file_idx++));
     }
     public List<Article> initLoadFile() throws Exception {
-		String fpath = realPath(save_file);
+		final String fpath = realPath("content_"+(file_idx_read++));
 		if(!new File(fpath).exists()) {
 			log("initLoadFile failed, file not exists:"+fpath);
 			return null;
 		}
 
-		List<Article> la = JsonUtil.extractArticles(Utils.fileToString(fpath, null) );
+		List<Article> la = JsonUtil.extractArticles(Utils.fileToString(fpath) );
 		log("initLoadFile "+fpath+" article size="+la.size());
 		return la;
 	}
-	private List<Article> fetch_old() throws Exception {
-		return fetch_old(null);
+	public List<Article> loadFileNext(int offset) throws Exception {
+		final int idx = file_idx_read + offset;
+		if(idx < 1 )
+			return null;
+		final String fpath = realPath("content_"+(idx-1));
+		if(!new File(fpath).exists())
+			return null;
+		file_idx_read = idx;
+		return JsonUtil.extractArticles(Utils.fileToString(fpath) );
 	}
+//	private List<Article> fetch_old() throws Exception {
+//		return fetch_old(null);
+//	}
 	private List<Article> fetch_old(String f) throws Exception {
 		HttpPost post = new HttpPost("https://www.inoreader.com/m/ajax.php?list_articles=1&ajax=1");
 		addDefHeaders(post);
@@ -135,9 +147,9 @@ public class InoreaderAn {
 	}
 
 	final String save_file = "mcontent.js";
-	private List<Article> fetch_first() throws Exception {
-		return fetch_first(null);
-	}
+//	private List<Article> fetch_first() throws Exception {
+//		return fetch_first(null);
+//	}
 	private List<Article> fetch_first(String f) throws Exception {
 		String murl = "https://www.inoreader.com/m/";
 		String url = "https://www.inoreader.com/m/?list_articles=1";
