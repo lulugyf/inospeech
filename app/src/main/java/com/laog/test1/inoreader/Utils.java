@@ -101,6 +101,7 @@ public class Utils {
 		System.out.println(msg);
 	}
 
+	private final static String[] tailTags = new String[] {"镜像链接：",  "© "}; //"相关阅读：",
 	public final static void _text(Node node, StringBuilder sb) {
 		if("#text".equals(node.getNodeName())){
 			String val = node.getNodeValue().trim();
@@ -122,6 +123,11 @@ public class Utils {
 		StringBuilder sb = new StringBuilder();
 		Document root = parser.getDocument();
 		_text(root, sb);
-		return sb.toString();
+		String cc = sb.toString();
+		for(String tag: tailTags){
+			int p = cc.indexOf(tag);
+			if(p > 0) cc = cc.substring(0, p);
+		}
+		return cc;
 	}
 }
