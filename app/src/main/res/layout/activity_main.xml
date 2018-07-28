@@ -29,11 +29,12 @@
                 android:layout_width="10dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/bt_spddown" />
+                android:drawableLeft="@drawable/ic_action_up"
+                android:text="" />
 
             <TextView
                 android:id="@+id/ed_speed"
-                android:layout_width="10dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="2.5" />
@@ -43,7 +44,8 @@
                 android:layout_width="10dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/bt_spdup" />
+                android:drawableLeft="@drawable/ic_action_down"
+                android:text="" />
             <!--<com.laog.test1.util.FloatPickerWidget
                 android:id="@+id/ed_speed"
                 decimal_places="1"
@@ -85,14 +87,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/str_back" />
+                android:drawableLeft="@drawable/ic_action_back"
+                android:text="" />
 
             <Button
                 android:id="@+id/button_forward"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/str_forward" />
+                android:drawableRight="@drawable/ic_action_forward"
+                android:text="" />
 
         </LinearLayout>
 

@@ -44,7 +44,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private var inoreader: InoreaderAn? = null
     private var isInit = false
-    private var task: FeedsBundle? = null
+    private var task: FeedBundle? = null
     private var reading = false
 
     private val message_type = "gyf.laog.test.SHOW_CONTENT"
@@ -116,6 +116,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 setOf(Environment.MEDIA_MOUNTED, Environment.MEDIA_MOUNTED_READ_ONLY)
     }
 
+    fun runTask(tp: Int): Unit {
+        FetchTask(tp).execute()
+    }
+    fun sendMessage(){
+        val i = Intent(message_type)
+        sendBroadcast(i)
+    }
+
     /**
      * Of TextToSpeech.OnInitListener
      * @param status
@@ -133,7 +141,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             } else {
                 isInit = true
             }
-            task = FeedsBundle()
+            task = FeedBundle(tts, bt1, this)
             FetchTask(0).execute()
         }
     }
@@ -169,7 +177,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
             if (action!!.equals(message_type)) {
-                if(task == null || task!!.lf == null)
+                if(task == null)
                     return;
                 ed2!!.text = task!!.content
                 ed2!!.scrollTo(0, 0)
@@ -194,98 +202,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
 
-    private inner class FeedsBundle{
-        var content: String? = null
-        var lf: List<FeedItem>? = null
-        var idx: Int = 0
-        private val ll = LinkedList<String>()
-        var pageidx = 0
-
-        fun back() {
-            if (lf == null) return
-            if (idx <= 1) return
-            ll.clear()
-            idx -= 2
-            if (tts!!.isSpeaking)
-                tts!!.stop()
-            next()
-        }
-        fun forward() {
-            if (lf == null) return
-            //if (idx >= lf!!.size) return
-            ll.clear()
-            if (tts!!.isSpeaking)
-                tts!!.stop()
-            next()
-        }
-
-        fun indicate(): String {
-            return idx.toString() + " / " + task!!.lf!!.size + "  " + pageidx
-        }
-        fun read_or_stop() {
-            if (reading) {
-                if (tts!!.isSpeaking)
-                    tts!!.stop()
-                reading = false
-                bt1!!.setText(R.string.str_start)
-            } else {
-                reading = true
-                bt1!!.setText(R.string.str_stop)
-                next()
-            }
-        }
-        /**
-         * 一段读完后自动转为下一段
-         */
-        operator fun next(): Boolean {
-            if (ll.size > 0 && reading ) {
-                tts!!.speak(ll.removeFirst(), TextToSpeech.QUEUE_FLUSH, null, "p")
-            } else {
-                if (lf == null || idx < 0)
-                    return false;
-                if( idx >= lf!!.size ) {
-                    FetchTask(1).execute()
-                    pageidx += 1
-                    return true
-                }
-                val art = lf!![idx]
-                idx += 1
-
-                speed = java.lang.Float.parseFloat(edSpeed!!.text.toString())
-
-                content = art.title + "\n\n" + art.author + " " + art.s_published +"\n\n" + art.content
-                val i = Intent(message_type)
-                ed2!!.context.sendBroadcast(i)
-                Log.d("", "article: "+art.s_published + " " + art.title)
-                ll.clear()
-                ll.add("标题")
-                ll.add(art.title)
-                ll.add(art.author)
-                for (s in art.content.split("。".toRegex()).dropLastWhile({ it.isEmpty() }).toTypedArray())
-                    ll.add(s)
-                if (reading) {
-                    tts!!.speak(ll.removeFirst(), TextToSpeech.QUEUE_FLUSH, null, "p")
-                }
-            }
-            return true
-        }
-        fun download(): Unit {
-            FetchTask(2).execute()
-            pageidx = 0
-        }
-
-        fun loaded(v: List<FeedItem>) {
-            idx = 0
-            lf = v
-            next()
-        }
-    }
-
-
-    /**
+      /**
      * act:  0-- first load 1-- load-old  2-- download
      */
-    private inner class FetchTask(val act: Int=0) : AsyncTask<Void, Void, Boolean>() {
+    protected inner class FetchTask(val act: Int=0) : AsyncTask<Void, Void, Boolean>() {
         private var lf: List<FeedItem>? = null
         private var content: String? = null
 
