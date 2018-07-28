@@ -16,6 +16,9 @@ public interface FeedItemDao {
     @Query("select * from feeditems where published>=:mintime and published<:maxtime order by published desc limit :pagesize")
     public List<FeedItem> getPage(long mintime, long maxtime, int pagesize) ;
 
+    @Query("select * from feeditems")
+    public List<FeedItem> getAll();
+
     @Insert
     public long insert(FeedItem item);
 
@@ -27,4 +30,7 @@ public interface FeedItemDao {
 
     @Query("select count(*) from feeditems")
     public int getCount();
+
+    @Query("select substr(s_published, 1, 10) as feeday, count(*) as ct from feeditems group by substr(s_published, 1, 10)")
+    public List<State> state();
 }

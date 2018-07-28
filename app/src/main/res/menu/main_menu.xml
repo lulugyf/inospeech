@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/mn_backup"
+        android:icon="@drawable/ic_backup"
+        android:title="@string/content_backup"/>
+    <item android:id="@+id/mn_archive"
+        android:icon="@drawable/ic_archive"
+        android:title="@string/str_archive" />
+    <item android:id="@+id/mn_help"
+        android:icon="@drawable/ic_help"
+        android:title="@string/help" />
+
+</menu>

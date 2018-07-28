@@ -143,7 +143,7 @@ public class JsonUtil {
 			lst.add(FeedItem.fromJSON(j));
 		}
 		if(jo.containsKey("continuation")) {
-			log("continuation: " + jo.getString("continuation"));
+//			log("continuation: " + jo.getString("continuation"));
 			continuation = jo.getString("continuation");
 		}
 		return lst;

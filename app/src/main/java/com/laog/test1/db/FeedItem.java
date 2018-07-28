@@ -6,12 +6,16 @@ import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.laog.test1.inoreader.Utils;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -146,6 +150,11 @@ public class FeedItem {
         Utils.log("href: "+href);
     }
 
+    /**
+     * 从以yearmonth 为名称的文件中读取内容部分, 记录中保存有文件中的偏移量, 偏移位置的前8个字节是内容长度
+     * @param rootdir
+     * @throws Exception
+     */
     public void loadContent(String rootdir) throws Exception {
         String fname = rootdir + File.separator + yearmonth;
         rawContent = Utils.loadContent(fname, filepos);
@@ -154,5 +163,62 @@ public class FeedItem {
         }else{
             content = "[load failed]";
         }
+    }
+
+    /**
+     * 保存内容部分保存到 以yearmonth为名称的文件中
+     * @param rootdir
+     * @throws Exception
+     */
+    public void saveContent(String rootdir) throws Exception {
+        final String fpath = rootdir + File.separator + yearmonth;
+        filepos = Utils.saveContent(fpath, rawContent);
+    }
+
+    /**
+     * 把记录保存到文件中, 便于备份, sqlite 中存记录过多的话会影响性能
+     * @param outstream
+     * @throws Exception
+     */
+    public void saveRecord(OutputStream outstream) throws Exception {
+        JSONObject j = new JSONObject();
+        j.put("id", id);
+        j.put("title", title);
+        j.put("published", published);
+        j.put("s_published", s_published);
+        j.put("yearmonth", yearmonth);
+        j.put("author", author);
+        j.put("href", href);
+        j.put("streamid", streamid);
+        j.put("filepos", filepos);
+        byte[] bytes = j.toJSONString().getBytes("UTF-8");
+        outstream.write(String.format("% 8d", bytes.length).getBytes());
+        outstream.write(bytes);
+    }
+    public boolean readRecord(InputStream instream) throws Exception{
+        byte[] bytes = new byte[8];
+        int r = instream.read(bytes);
+        if(r != bytes.length) {
+            Log.e("", "file size not enough");
+            return false;
+        }
+        int len = Integer.parseInt(new String(bytes).trim());
+        bytes = new byte[len];
+        r = instream.read(bytes);
+        if(r != bytes.length){
+            Log.e("", "readRecord failed, record bytes not enough");
+            return false;
+        }
+        JSONObject j = JSON.parseObject(new String(bytes, "UTF-8"));
+        id = j.getString("id");
+        title = j.getString("title");
+        published = j.getLongValue("published");
+        s_published = j.getString("s_published");
+        yearmonth = j.getString("yearmonth");
+        author = j.getString("author");
+        href = j.getString("href");
+        streamid = j.getString("streamid");
+        filepos = j.getLong("filepos");
+        return true;
     }
 }

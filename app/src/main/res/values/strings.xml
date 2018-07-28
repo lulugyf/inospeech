@@ -8,4 +8,7 @@
     <string name="bt_spdup"><![CDATA[>]]></string>
     <string name="bt_spddown"><![CDATA[<]]></string>
     <string name="str_start">Read</string>
+    <string name="content_backup">Backup Content</string>
+    <string name="help">Help</string>
+    <string name="str_archive">Archive</string>
 </resources>

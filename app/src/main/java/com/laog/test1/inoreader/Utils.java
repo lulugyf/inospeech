@@ -16,6 +16,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
 
 public class Utils {
 	public static String fileToString(String fname) throws Exception {
@@ -129,5 +130,10 @@ public class Utils {
 			if(p > 0) cc = cc.substring(0, p);
 		}
 		return cc;
+	}
+
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd HH:mm:SS");
+	public final static String timeToStr(long tm) {
+		return sdf.format(new java.util.Date(tm));
 	}
 }

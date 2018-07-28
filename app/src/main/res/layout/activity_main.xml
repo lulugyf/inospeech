@@ -19,30 +19,31 @@
             <TextView
                 android:id="@+id/textView2"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_marginLeft="5dp"
-                android:layout_weight="1"
+                android:layout_weight="1.0"
                 android:text="TextView" />
 
             <ImageButton
                 android:id="@+id/bt_spddown"
-                android:layout_width="10dp"
+                android:layout_width="60dp"
                 android:layout_height="40dp"
-                android:layout_weight="1"
+                android:layout_weight="0"
                 android:src="@drawable/ic_action_down" />
 
             <TextView
                 android:id="@+id/ed_speed"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="2.5" />
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:text="2.5"
+                android:textAlignment="center" />
 
             <ImageButton
                 android:id="@+id/bt_spdup"
-                android:layout_width="10dp"
+                android:layout_width="60dp"
                 android:layout_height="40dp"
-                android:layout_weight="1"
+                android:layout_weight="0"
                 android:src="@drawable/ic_action_up" />
         </LinearLayout>
 

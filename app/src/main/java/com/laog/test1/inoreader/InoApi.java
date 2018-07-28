@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.laog.test1.db.FeedItem;
 import com.laog.test1.db.FeedItemDao;
+import com.laog.test1.db.State;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -80,6 +81,33 @@ public class InoApi {
 			httpclient = HttpClients.createDefault();
 	}
 
+	/**
+	 * 统计库中的记录信息和 文件的情况
+	 * @throws Exception
+	 */
+	public void state() throws Exception{
+		if(dao != null){
+			log("=========state in feeditems");
+			for(State st: dao.state()) {
+				log("   "+st.getFeeday() + "  " + st.getCt());
+			}
+		}
+		log("==== files in "+tmpDir);
+		File ft = new File(tmpDir);
+		for(File f: ft.listFiles()) {
+			if(f.isDirectory()) continue;
+			log("  " + f.getName() + " len: "+f.length() + " lastmodify: "+Utils.timeToStr(f.lastModified()));
+		}
+	}
+
+	public void archive(String path) throws  Exception {
+
+	}
+
+	public void backup(String path) throws Exception {
+
+	}
+
     /**
      * 下载数据
      * @return
@@ -90,6 +118,8 @@ public class InoApi {
 	        return -1;
 	    JsonUtil ju = new JsonUtil();
 	    long maxTime = dao.findMaxTime();
+	    if(maxTime > 0L)
+	    	maxTime -= 3600; //往后推一个小时, 这个参数是feeds开始的时间
 	    int count = 0;
         log("begin downloading, maxtime: "+maxTime);
 	    String feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot="+maxTime;
@@ -98,10 +128,9 @@ public class InoApi {
             String content = get(url);
             List<FeedItem> lst = ju.parseStream(content);
             for(FeedItem fi: lst){
-
                 try {
-                    dao.insert(fi);
-					fi.setFilepos(Utils.saveContent(realPath(fi.getYearmonth()), fi.rawContent));
+                    dao.insert(fi); // 先插入记录, 如果有重复就略过了, 避免内容文件里有重复的, 但表中没有
+					fi.saveContent(tmpDir);
 					dao.updateItem(fi);
                 }catch (Exception e){ Log.e("", "dulplicate item:"+fi.getId()); }
             }
@@ -112,9 +141,38 @@ public class InoApi {
 	            break;
             feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot="+maxTime+"&c="+c;
         }
-
         return count;
+    }
 
+    public String[] download(String c) throws Exception {
+        if(dao == null) {
+            log("download failed: dao is null");
+            return null;
+        }
+        String feed = null;
+        if(c == null){
+            long maxTime = dao.findMaxTime();
+            if(maxTime > 0L)
+                maxTime -= 3600; //往后推一个小时, 这个参数是feeds开始的时间
+            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot="+maxTime;
+        }else{
+            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot=0&c="+c;
+        }
+        String url = api_url + "stream/contents/" + feed;
+        String content = get(url);
+        JsonUtil ju = new JsonUtil();
+        List<FeedItem> lst = ju.parseStream(content);
+        for(FeedItem fi: lst){
+            try {
+                dao.insert(fi); // 先插入记录, 如果有重复就略过了, 避免内容文件里有重复的, 但表中没有
+                fi.saveContent(tmpDir);
+                dao.updateItem(fi);
+            }catch (Exception e){ Log.e("", "dulplicate item:"+fi.getId()); }
+        }
+        Log.d("", "download:"+feed+" size:"+lst.size());
+        Log.d("", "download: max date:"+lst.get(lst.size()-1).getS_published());
+        c = ju.getC();
+        return new String[]{c, String.valueOf(lst.size())};
     }
 
     private int pagesize = 20;
