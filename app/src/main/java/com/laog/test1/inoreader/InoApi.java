@@ -1,5 +1,7 @@
 package com.laog.test1.inoreader;
 
+import android.util.Log;
+
 import com.laog.test1.db.FeedItem;
 import com.laog.test1.db.FeedItemDao;
 
@@ -96,10 +98,12 @@ public class InoApi {
             String content = get(url);
             List<FeedItem> lst = ju.parseStream(content);
             for(FeedItem fi: lst){
-                fi.setFilepos(Utils.saveContent(realPath(fi.getYearmonth()), fi.rawContent));
+
                 try {
-                    dao.insertAll(fi);
-                }catch (Exception e){ e.printStackTrace(); }
+                    dao.insert(fi);
+					fi.setFilepos(Utils.saveContent(realPath(fi.getYearmonth()), fi.rawContent));
+					dao.updateItem(fi);
+                }catch (Exception e){ Log.e("", "dulplicate item:"+fi.getId()); }
             }
             count += lst.size();
             String c = ju.getC();

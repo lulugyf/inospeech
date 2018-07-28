@@ -17,10 +17,13 @@ public interface FeedItemDao {
     public List<FeedItem> getPage(long mintime, long maxtime, int pagesize) ;
 
     @Insert
-    public long[] insertAll(FeedItem ... items);
+    public long insert(FeedItem item);
 
     @Query("select max(published) from feeditems")
     public long findMaxTime();
+
+    @Update
+    public int updateItem(FeedItem v);
 
     @Query("select count(*) from feeditems")
     public int getCount();

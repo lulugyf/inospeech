@@ -16,6 +16,7 @@ import android.util.Log
 import android.widget.Button
 import android.view.View
 import android.view.Window
+import android.widget.ImageButton
 
 import java.util.LinkedList
 import java.util.Locale
@@ -82,14 +83,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             //task = FetchTask()
             task!!.download()
         }
-        (findViewById<View>(R.id.button_back) as Button).setOnClickListener { if (task != null) task!!.back() }
-        (findViewById<View>(R.id.button_forward) as Button).setOnClickListener { if (task != null) task!!.forward() }
-        (findViewById<View>(R.id.bt_spdup) as Button).setOnClickListener {
+        (findViewById<View>(R.id.button_back) as ImageButton).setOnClickListener { if (task != null) task!!.back() }
+        (findViewById<View>(R.id.button_forward) as ImageButton).setOnClickListener { if (task != null) task!!.forward() }
+        (findViewById<View>(R.id.bt_spdup) as ImageButton).setOnClickListener {
             speed += 0.1f
             edSpeed!!.text = "%.2f".format(speed)
             tts!!.setSpeechRate(speed);
         }
-        (findViewById<View>(R.id.bt_spddown) as Button).setOnClickListener {
+        (findViewById<View>(R.id.bt_spddown) as ImageButton).setOnClickListener {
             speed -= 0.1f
             edSpeed!!.text = "%.2f".format(speed)
             tts!!.setSpeechRate(speed);

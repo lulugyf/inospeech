@@ -24,13 +24,12 @@
                 android:layout_weight="1"
                 android:text="TextView" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/bt_spddown"
                 android:layout_width="10dp"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:drawableLeft="@drawable/ic_action_up"
-                android:text="" />
+                android:src="@drawable/ic_action_down" />
 
             <TextView
                 android:id="@+id/ed_speed"
@@ -39,28 +38,12 @@
                 android:layout_weight="1"
                 android:text="2.5" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/bt_spdup"
                 android:layout_width="10dp"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:drawableLeft="@drawable/ic_action_down"
-                android:text="" />
-            <!--<com.laog.test1.util.FloatPickerWidget
-                android:id="@+id/ed_speed"
-                decimal_places="1"
-                default_value="2.0f"
-                increment_amount="0.1f"
-                maximum_value="5.0f"
-                minimum_value="1.0f"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="5dp"
-                android:layout_weight="1"
-                android:ems="10"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:gravity="left" /> -->
+                android:src="@drawable/ic_action_up" />
         </LinearLayout>
 
         <LinearLayout
@@ -82,21 +65,19 @@
                 android:layout_weight="1"
                 android:text="@string/str_start" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/button_back"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:drawableLeft="@drawable/ic_action_back"
-                android:text="" />
+                android:src="@drawable/ic_action_back" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/button_forward"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:drawableRight="@drawable/ic_action_forward"
-                android:text="" />
+                android:src="@drawable/ic_action_forward" />
 
         </LinearLayout>
 
