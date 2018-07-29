@@ -264,11 +264,11 @@ public final class MainActivity extends Activity implements OnInitListener {
                 } else if(act == 2){
                     __download();
                 }else if(act == 3)
-                    inoApi.state();
+                    content = inoApi.state();
                 else if(act == 4)
                     inoApi.archive(getExternalFilesDir("arch").getAbsolutePath());
                 else if(act == 5)
-                    inoApi.backup(MainActivity.this.getExternalFilesDir("back").getAbsolutePath());
+                    content = inoApi.backup(MainActivity.this.getExternalFilesDir("back").getAbsolutePath());
             } catch (Exception var4) {
                 this.content = var4.getMessage();
                 var4.printStackTrace();

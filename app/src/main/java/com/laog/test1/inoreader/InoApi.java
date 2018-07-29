@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,27 +86,53 @@ public class InoApi {
 	 * 统计库中的记录信息和 文件的情况
 	 * @throws Exception
 	 */
-	public void state() throws Exception{
+	public String state() throws Exception{
+		StringBuilder sb = new StringBuilder();
 		if(dao != null){
-			log("=========state in feeditems");
+			sb.append("=========state in feeditems\n");
 			for(State st: dao.state()) {
-				log("   "+st.getFeeday() + "  " + st.getCt());
+				sb.append("   "+st.getFeeday() + "  " + st.getCt()).append('\n');
 			}
 		}
-		log("==== files in "+tmpDir);
+		sb.append("==== files in "+tmpDir).append('\n');
 		File ft = new File(tmpDir);
 		for(File f: ft.listFiles()) {
 			if(f.isDirectory()) continue;
-			log("  " + f.getName() + " len: "+f.length() + " lastmodify: "+Utils.timeToStr(f.lastModified()));
+			sb.append("  " + f.getName() + " len: "+f.length() + " lastmodify: "+Utils.timeToStr(f.lastModified())).append('\n');
 		}
+		return sb.toString();
 	}
 
 	public void archive(String path) throws  Exception {
 
 	}
 
-	public void backup(String path) throws Exception {
+	public String backup(String path) throws Exception {
+		log("---path:" + path);
+		String fpath = path + File.separator + "backup";
+		File ft = new File(fpath);
+		if(!ft.exists())
+		    ft.mkdirs();
+		ft = new File(tmpDir);
+		StringBuilder sb = new StringBuilder();
+		sb.append("=== backup from "+tmpDir +" to "+fpath).append('\n');
+		for(File f: ft.listFiles()) {
+            if(f.isDirectory())
+                continue;
+            Utils.copy(f.getAbsolutePath().toString(), fpath + File.separator + f.getName());
+            sb.append("backup file ").append(f.getName()).append('\n');
+        }
 
+        sb.append("==== backup database sqlite to file\n");
+        List<FeedItem> lst = dao.getAll();
+        File f1 = new File(fpath + File.separator + "feeditems."+System.currentTimeMillis());
+        OutputStream out = new FileOutputStream(f1);
+		for(FeedItem fi: lst) {
+		    fi.saveRecord(out);
+        }
+        out.close();
+        sb.append("   record count:"+lst.size() +"  file length:"+f1.length());
+        return sb.toString();
 	}
 
     /**
