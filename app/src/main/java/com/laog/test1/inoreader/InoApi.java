@@ -181,6 +181,9 @@ public class InoApi {
             long maxTime = dao.findMaxTime();
             if(maxTime > 0L)
                 maxTime -= 3600; //往后推一个小时, 这个参数是feeds开始的时间
+			else
+				maxTime = System.currentTimeMillis()/1000 - oneday;
+			Log.d("", "load from "+Utils.timeToStr(maxTime));
             feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot="+maxTime;
         }else{
             feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot=0&c="+c;
@@ -211,9 +214,14 @@ public class InoApi {
 	        return null;
         if(mintime <= 0L)
             mintime = System.currentTimeMillis() / 1000 - oneday;
-        List<FeedItem> lst = dao.getPage(mintime, pagesize);
-        if(lst == null || lst.size() == 0)
-            return null;
+		List<FeedItem> lst = null;
+		for(int i=0; i<6; i++) {
+			lst = dao.getPage(mintime, pagesize);
+			if(lst != null && lst.size() > 0)
+				break;
+		}
+		if(lst == null || lst.size() == 0)
+			return null;
         for(FeedItem fi: lst) {
             fi.loadContent(tmpDir);
         }
