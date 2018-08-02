@@ -171,6 +171,8 @@ public class InoApi {
         return count;
     }
 
+    private long g_maxTime;
+	private int down_pagesize = 50;
     public String[] download(String c) throws Exception {
         if(dao == null) {
             log("download failed: dao is null");
@@ -183,10 +185,11 @@ public class InoApi {
                 maxTime -= 3600; //往后推一个小时, 这个参数是feeds开始的时间
 			else
 				maxTime = System.currentTimeMillis()/1000 - oneday;
+			g_maxTime = maxTime;
 			Log.d("", "load from "+Utils.timeToStr(maxTime));
-            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot="+maxTime;
+            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n="+down_pagesize+"&ot="+maxTime;
         }else{
-            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot=0&c="+c;
+            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n="+down_pagesize+"&ot="+g_maxTime+"&c="+c;
         }
         String url = api_url + "stream/contents/" + feed;
         String content = get(url);
@@ -202,7 +205,14 @@ public class InoApi {
         Log.d("", "download:"+feed+" size:"+lst.size());
         Log.d("", "download: max date:"+lst.get(lst.size()-1).getS_published());
         c = ju.getC();
-        return new String[]{c, String.valueOf(lst.size())};
+        int lstsize = lst.size();
+        String prompt = String.valueOf(lstsize);
+        if(lstsize > 0) {
+        	final String pt = "minTime: " + lst.get(0).getS_published() + " maxTime: " + lst.get(lstsize - 1).getS_published();
+			Log.d("", pt);
+			prompt = prompt + " " + pt;
+		}
+        return new String[]{c, prompt};
     }
 
     private int pagesize = 20;
