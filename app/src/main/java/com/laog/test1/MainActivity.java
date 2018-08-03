@@ -56,8 +56,11 @@ public final class MainActivity extends Activity implements OnInitListener {
         this.setContentView(R.layout.activity_main);
 
         ed1 = (TextView) findViewById(R.id.textView2);
-        tvContent = (TextView) findViewById(R.id.textView);
+        tvContent = (TextView) findViewById(R.id.tv_content);
         tvContent.setMovementMethod(new ScrollingMovementMethod());
+//        tvContent.setTextIsSelectable(true);
+//        tvContent.setFocusable(true);
+//        tvContent.setFocusableInTouchMode(true);
 
         edSpeed = (TextView) findViewById(R.id.ed_speed);
         edSpeed.setText(speed + "");
@@ -148,14 +151,30 @@ public final class MainActivity extends Activity implements OnInitListener {
     /*从剪贴板读取内容然后阅读*/
     private void readClipBoard() {
         ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-//        clipboard.setText("Text to copy");
+
         ClipData d = clipboard.getPrimaryClip();
         if(d == null || d.getItemCount() == 0){
             tvContent.setText("[no data in clipboard]");
             return;
         }
-        ClipData.Item item = d.getItemAt(0);
-        String data = item.getText().toString();
+//        Log.d("", "clipboard itemcount: " +d.getItemCount());
+        String data = null;
+        for(int i=0; i<d.getItemCount(); i++){
+            ClipData.Item ci = d.getItemAt(i);
+            if(ci.getText() != null)
+                data = ci.coerceToText(this).toString();
+//            Log.d("", i+" text is null="+(ci.getText() == null));
+//            Log.d("", i+" uri is null="+(ci.getUri() == null));
+//            Log.d("", i+" intent is null="+(ci.getIntent() == null));
+//            Log.d("", i+" text = "+(ci.coerceToText(this)));
+        }
+//        Log.d("", "getText return "+clipboard.getText());
+//        ClipData.Item item = d.getItemAt(0);
+//        String data = item.getText().toString();
+        if(data == null){
+            tvContent.setText("[not found text in clipboard]");
+            return;
+        }
         tvContent.setText(data);
         if(data.length() > tts.getMaxSpeechInputLength()){
             data = data.substring(0, tts.getMaxSpeechInputLength());
@@ -287,7 +306,7 @@ public final class MainActivity extends Activity implements OnInitListener {
                         inoApi = new InoApi(getFilesDir().getAbsolutePath().toString(), db.feedItemDao(), false);
                     lf = inoApi.loadnew();
                 } else if (this.act == 1) {
-                    inoApi.loadold();
+                    lf = inoApi.loadold();
                 } else if(act == 2){
                     __download();
                 }else if(act == 3)

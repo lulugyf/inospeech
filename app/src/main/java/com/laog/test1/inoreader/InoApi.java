@@ -103,8 +103,13 @@ public class InoApi {
 		return sb.toString();
 	}
 
+    /**
+     * 归档, 把上个月及以前的数据保存到sdcard上, 并删除当前数据中的这部分
+     * @param path
+     * @throws Exception
+     */
 	public void archive(String path) throws  Exception {
-
+        //TODO 归档的实现
 	}
 
 	public String backup(String path) throws Exception {
@@ -237,6 +242,7 @@ public class InoApi {
         }
         mintime = lst.get(lst.size()-1).getPublished();
         maxtime = lst.get(0).getPublished();
+        Log.d("", "loadnew mintime: "+mintime + " maxtime: "+maxtime);
 	    return lst;
     }
 
@@ -244,15 +250,21 @@ public class InoApi {
         if(dao == null)
             return null;
 
-        maxtime = mintime-oneday;
-        List<FeedItem> lst = dao.getPage(maxtime, mintime, pagesize);
-        if(lst == null || lst.size() == 0)
-            return null;
+        maxtime = mintime;
+        mintime = mintime - oneday;
+		Log.d("", "loadold begin: "+mintime + " "+maxtime);
+        List<FeedItem> lst = dao.getPage(mintime, maxtime, pagesize);
+        if(lst == null || lst.size() == 0) {
+        	Log.w("", "load old failed lst is null:"+(lst== null));
+			return null;
+		}
         for(FeedItem fi: lst) {
             fi.loadContent(tmpDir);
         }
         mintime = lst.get(lst.size()-1).getPublished();
         maxtime = lst.get(0).getPublished();
+		Log.d("", "loadold mintime: "+mintime + " maxtime: "+maxtime + " count: "+lst.size());
+
         return lst;
     }
 
