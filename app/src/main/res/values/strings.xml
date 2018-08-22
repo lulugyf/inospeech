@@ -11,4 +11,5 @@
     <string name="content_backup">Backup Content</string>
     <string name="help">Help</string>
     <string name="str_archive">Archive</string>
+    <string name="str_readclip">Read Clipboard</string>
 </resources>

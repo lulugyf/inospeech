@@ -103,8 +103,13 @@ public class InoApi {
 		return sb.toString();
 	}
 
+    /**
+     * 归档, 把上个月及以前的数据保存到sdcard上, 并删除当前数据中的这部分
+     * @param path
+     * @throws Exception
+     */
 	public void archive(String path) throws  Exception {
-
+        //TODO 归档的实现
 	}
 
 	public String backup(String path) throws Exception {
@@ -171,6 +176,8 @@ public class InoApi {
         return count;
     }
 
+    private long g_maxTime;
+	private int down_pagesize = 50;
     public String[] download(String c) throws Exception {
         if(dao == null) {
             log("download failed: dao is null");
@@ -183,10 +190,11 @@ public class InoApi {
                 maxTime -= 3600; //往后推一个小时, 这个参数是feeds开始的时间
 			else
 				maxTime = System.currentTimeMillis()/1000 - oneday;
+			g_maxTime = maxTime;
 			Log.d("", "load from "+Utils.timeToStr(maxTime));
-            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot="+maxTime;
+            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n="+down_pagesize+"&ot="+maxTime;
         }else{
-            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n=50&ot=0&c="+c;
+            feed = "user%2F-%2Fstate%2Fcom.google%2Freading-list?r=o&n="+down_pagesize+"&ot="+g_maxTime+"&c="+c;
         }
         String url = api_url + "stream/contents/" + feed;
         String content = get(url);
@@ -202,7 +210,14 @@ public class InoApi {
         Log.d("", "download:"+feed+" size:"+lst.size());
         Log.d("", "download: max date:"+lst.get(lst.size()-1).getS_published());
         c = ju.getC();
-        return new String[]{c, String.valueOf(lst.size())};
+        int lstsize = lst.size();
+        String prompt = String.valueOf(lstsize);
+        if(lstsize > 0) {
+        	final String pt = "minTime: " + lst.get(0).getS_published() + " maxTime: " + lst.get(lstsize - 1).getS_published();
+			Log.d("", pt);
+			prompt = prompt + " " + pt;
+		}
+        return new String[]{c, prompt};
     }
 
     private int pagesize = 20;
@@ -227,6 +242,7 @@ public class InoApi {
         }
         mintime = lst.get(lst.size()-1).getPublished();
         maxtime = lst.get(0).getPublished();
+        Log.d("", "loadnew mintime: "+mintime + " maxtime: "+maxtime);
 	    return lst;
     }
 
@@ -234,15 +250,21 @@ public class InoApi {
         if(dao == null)
             return null;
 
-        maxtime = mintime-oneday;
-        List<FeedItem> lst = dao.getPage(maxtime, mintime, pagesize);
-        if(lst == null || lst.size() == 0)
-            return null;
+        maxtime = mintime;
+        mintime = mintime - oneday;
+		Log.d("", "loadold begin: "+mintime + " "+maxtime);
+        List<FeedItem> lst = dao.getPage(mintime, maxtime, pagesize);
+        if(lst == null || lst.size() == 0) {
+        	Log.w("", "load old failed lst is null:"+(lst== null));
+			return null;
+		}
         for(FeedItem fi: lst) {
             fi.loadContent(tmpDir);
         }
         mintime = lst.get(lst.size()-1).getPublished();
         maxtime = lst.get(0).getPublished();
+		Log.d("", "loadold mintime: "+mintime + " maxtime: "+maxtime + " count: "+lst.size());
+
         return lst;
     }
 
