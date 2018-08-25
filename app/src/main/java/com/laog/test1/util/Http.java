@@ -1,8 +1,11 @@
 package com.laog.test1.util;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -38,6 +41,7 @@ import cz.msebera.android.httpclient.impl.client.CloseableHttpClient;
 import cz.msebera.android.httpclient.impl.client.HttpClients;
 import cz.msebera.android.httpclient.impl.conn.DefaultProxyRoutePlanner;
 import cz.msebera.android.httpclient.impl.conn.PoolingHttpClientConnectionManager;
+import cz.msebera.android.httpclient.impl.cookie.BasicClientCookie;
 import cz.msebera.android.httpclient.impl.cookie.DefaultCookieSpec;
 import cz.msebera.android.httpclient.message.BasicNameValuePair;
 import cz.msebera.android.httpclient.protocol.HttpContext;
@@ -49,16 +53,20 @@ public class Http {
     private CloseableHttpClient httpclient;
     private HttpClientContext context;
     private BasicCookieStore cookieStore;
-    private String cookie_file = "cookies.obj";
+    private String cookie_file = "d:/tmp/haodoo/cookies.obj";
     private DefaultCookieSpec cookieSpec = new DefaultCookieSpec();
-    private String baseDir = "d:/tmp/haodoo/";
-    private boolean cookieChg = false;
+    private String baseDir = "d:/tmp/haodoo/wisdom/";
+//    private boolean cookieChg = false;
 
     private String start_url = "";
 
     public static void main(String[] args) throws Exception {
         Http ht = new Http();
-        ht.test();
+        ht.test1();
+    }
+    public Http() throws Exception{
+        buildClient(false); //httpclient = HttpClients.createDefault();
+        restoreCookie();
     }
 
     // http://www.haodoo.net/
@@ -110,21 +118,57 @@ public class Http {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-    public Http() throws Exception{
-        buildClient(true); //httpclient = HttpClients.createDefault();
+    private String listFiles() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        File f = new File(baseDir);
+        for(String fname: f.list()){
+            if(fname.endsWith(".epub")){
+                sb.append(fname).append(' ');
+            }
+        }
+        return sb.toString();
     }
+    private void saveEpub(String bookurl, String bookname) throws Exception {
+        System.out.println("   " + bookname + "   "+bookurl);
+        String page = get(bookurl);
+        String bookid = inStr(page, "value=\"下載 epub 檔\" onClick = \"DownloadEpub('", "')\";");
+        String epuburl = "http://www.haodoo.net/?M=d&P="+bookid+".epub";
+        String title = inStr(page, "SetTitle(\"", "\");");
+        get(epuburl, title+".epub");
+    }
+    private void test1() throws Exception {
+        // "http://www.haodoo.net/?M=hd&P=history"
+        String[] urls = new String[]{ "http://www.haodoo.net/?M=hd&P=wisdom", "http://www.haodoo.net/?M=hd&P=wisdom-1", "http://www.haodoo.net/?M=hd&P=wisdom-2", "http://www.haodoo.net/?M=hd&P=wisdom-3",
+        "http://www.haodoo.net/?M=hd&P=wisdom-4", "http://www.haodoo.net/?M=hd&P=wisdom-5", "http://www.haodoo.net/?M=hd&P=wisdom-6"};
+        String baseUrl = "http://www.haodoo.net/";
+        String fileList = listFiles();
+        for(String u: urls) {
+            log("---collect: "+u);
+            String page = get(u);
+            List<TextUtil.Pair<String, String>> bookUrls = TextUtil.parsePair(page, " href=\\\"(\\?M=book&P=[\\d\\w]+)\\\" *>([^<]+)</a>");
+            for(TextUtil.Pair<String, String> p: bookUrls) {
+                log("   --bookurl: "+p._1());
+                if(fileList.indexOf(p._2()+".epub") > 0){
+                    System.out.println("file: "+p._2()+ " exists!");
+                    continue;
+                }
+                saveEpub(baseUrl+p._1(), p._2());
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
     public void login() throws Exception {
         log("----login");
         List<NameValuePair> formparams = new ArrayList<NameValuePair>();
@@ -176,9 +220,8 @@ public class Http {
         }
 
         cookieStore = new BasicCookieStore();
-
         httpclient = HttpClients.custom()
-                .setRoutePlanner(routePlanner)
+                .setRoutePlanner(useProxy? routePlanner: null)
                 .setDefaultCookieStore(cookieStore)
                 .build();
 
@@ -203,6 +246,7 @@ public class Http {
         CloseableHttpResponse resp = httpclient.execute(get, context);
         final int rcode = resp.getStatusLine().getStatusCode();
         if(200 == rcode) {
+            parseCookie(resp, get.getURI());
             return EntityUtils.toString(resp.getEntity());
         }else if(401 == rcode){
             login();
@@ -214,7 +258,10 @@ public class Http {
     }
 
     private String realPath(String p) {
-        return baseDir + p;
+        if(!p.startsWith(baseDir))
+            return baseDir + p;
+        else
+            return p;
     }
 
     private void get(String url, String fname) throws Exception {
@@ -227,6 +274,8 @@ public class Http {
         HttpGet get = new HttpGet(url);
         addDefHeaders(get);
         CloseableHttpResponse resp = httpclient.execute(get, context);
+        if(resp.getStatusLine().getStatusCode() == 200)
+            parseCookie(resp, get.getURI());
         log("execute get return "+resp.getStatusLine());
         saveResp(resp, fname);
     }
@@ -257,9 +306,9 @@ public class Http {
         }
     }
 
-
     private void parseCookie(HttpResponse response, URI uri) throws Exception {
         CookieOrigin co = new CookieOrigin(uri.getHost(), uri.getPort()>0?uri.getPort():443, "/", true);  //uri.getPath()
+        boolean cookieChg = false;
         for(Header h: response.getHeaders("Set-Cookie")) {
             log("---" + h.getValue());
             List<Cookie> l = cookieSpec.parse(h, co);
@@ -272,6 +321,8 @@ public class Http {
                 log("failed to parse cookies");
             }
         }
+        if(cookieChg)
+            saveCookie();
     }
 
     private static void log(Object msg) {
@@ -288,9 +339,59 @@ public class Http {
         req.addHeader("accept-encoding", "gzip, deflate, br");
         req.addHeader("accept-language", "zh-CN,zh;q=0.9,en;q=0.8");
         req.addHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36");
-        req.addHeader("Cookie", "__utmc=111611677; __utmz=111611677.1533970330.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utma=111611677.1877317255.1533970330.1534945341.1534949119.5");
+//        req.addHeader("Cookie", "__utmc=111611677; __utmz=111611677.1533970330.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utma=111611677.1877317255.1533970330.1534945341.1534949119.5");
         req.addHeader("Host", "www.haodoo.net");
         req.addHeader("Referer", "http://www.haodoo.net/?M=hd&P=100-1");
 
     }
+
+    private void saveCookie() throws Exception {
+//        if(cookieChg) {
+            ObjectOutputStream oo = new ObjectOutputStream(new FileOutputStream(cookie_file));
+            oo.writeObject(cookieStore);
+            oo.close();
+            log("saveCookie done!");
+//        }
+    }
+
+    private void restoreCookie() throws Exception {
+        File f = new File(cookie_file);
+        if(f.exists()) {
+            ObjectInputStream oi = new ObjectInputStream(new FileInputStream(cookie_file));
+            BasicCookieStore cs = (BasicCookieStore)oi.readObject();
+            oi.close();
+
+//			if(context != null) {
+//				context.setCookieStore(cs);
+//			}
+            for(Cookie c: cs.getCookies() ) {
+//				System.out.printf("restore cookie: name=%s; value=%s; path=%s\n",
+//						c.getName(), c.getValue(), c.getPath());
+                cookieStore.addCookie(c);
+            }
+        }
+        // screen_pixel_ratio=1; screen_resolution=1366x768; device_type=normal; window_dimensions=1345x635
+//        boolean has_screen = false;
+//        for(Cookie c: cookieStore.getCookies()) {
+//            if("screen_pixel_ratio".equals(c.getName())) {
+//                has_screen = true;
+//                break;
+//            }
+//        }
+//        if(!has_screen) {  // only for  www.inoreader.com
+//            log("--- add screen cookies");
+//            _addCookie("screen_pixel_ratio", "1", "/" );
+//            _addCookie("screen_resolution", "1366x768", "/" );
+//            _addCookie("device_type", "normal", "/");
+//            _addCookie("window_dimensions", "1345x635", "/");
+//        }
+    }
+//    private void _addCookie(String n, String v, String p) {
+//        BasicClientCookie bcc = new BasicClientCookie(n, v);
+//        bcc.setPath(p);
+//        bcc.setDomain("www.inoreader.com");
+//        try {
+//            cookieStore.addCookie(bcc);
+//        }catch(Exception e){}
+//    }
 }
