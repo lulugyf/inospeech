@@ -12,4 +12,20 @@
     <string name="help">Help</string>
     <string name="str_archive">Archive</string>
     <string name="str_readclip">Read Clipboard</string>
+    <string name="title_activity_demo">DemoActivity</string>
+
+    <string name="message_open_viewer">Tap on any image to open viewer!</string>
+    <string name="got_it">Got it</string>
+
+    <string-array name="options">
+        <item>hide status bar</item>
+        <item>images margin</item>
+        <item>container padding</item>
+        <item>images rounding</item>
+        <item>swipe-to-dismiss</item>
+        <item>zooming</item>
+        <item>show overlay</item>
+        <item>random background</item>
+        <item>post-processing (via ImageRequestBuilder)</item>
+    </string-array>
 </resources>

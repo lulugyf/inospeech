@@ -1,6 +1,8 @@
 package com.laog.test1.inoreader;
 
 import java.io.StringReader;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.cyberneko.html.parsers.DOMParser;
 import org.w3c.dom.Document;
@@ -154,7 +156,7 @@ public class Article implements Comparable<Article>{
 		}
 		return sb.toString();
 	}
-    public static void print(Node node, String indent) {
+    private static void print(Node node, String indent) {
         System.out.println(indent+node.getNodeName() + " " + node.getNodeValue() + " " +attrs(node));
         Node child = node.getFirstChild();
         while (child != null) {
@@ -162,6 +164,31 @@ public class Article implements Comparable<Article>{
             child = child.getNextSibling();
         }
     }
+
+    private static void parseImage(Node node, List<String> imgs) {
+		if("IMG".equals(node.getNodeName())){
+			NamedNodeMap nn = node.getAttributes();
+			if(nn != null){
+				Node att = nn.getNamedItem("src");
+				if(att != null)
+					imgs.add(att.getNodeValue());
+			}
+			return;
+		}
+		Node child = node.getFirstChild();
+		while (child != null) {
+			parseImage(child, imgs);
+			child = child.getNextSibling();
+		}
+	}
+    public static List<String> parseImageLinks(String content) throws Exception {
+		InputSource src = new InputSource(new StringReader(content));
+		DOMParser parser = new DOMParser();
+		parser.parse(src);
+		List<String> ret = new LinkedList<>();
+		parseImage(parser.getDocument(), ret);
+		return ret;
+	}
 
 	@Override
 	public int compareTo(Article o) {

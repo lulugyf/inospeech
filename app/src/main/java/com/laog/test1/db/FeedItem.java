@@ -144,10 +144,11 @@ public class FeedItem {
     }
 
     public void print() {
+        Utils.log("----id: " +id);
         Utils.log("title: "+title);
-        Utils.log("published:"+s_published);
-        Utils.log("author: "+author);
-        Utils.log("href: "+href);
+        Utils.log("published: "+s_published);
+//        Utils.log("author: "+author);
+//        Utils.log("href: "+href);
     }
 
     /**
@@ -192,33 +193,35 @@ public class FeedItem {
         j.put("streamid", streamid);
         j.put("filepos", filepos);
         byte[] bytes = j.toJSONString().getBytes("UTF-8");
-        outstream.write(String.format("% 8d", bytes.length).getBytes());
+        outstream.write(String.format("% 8d", bytes.length+1).getBytes());
         outstream.write(bytes);
+        outstream.write('\n');
     }
-    public boolean readRecord(InputStream instream) throws Exception{
+    public static FeedItem readRecord(InputStream instream) throws Exception{
         byte[] bytes = new byte[8];
         int r = instream.read(bytes);
         if(r != bytes.length) {
-            Log.e("", "file size not enough");
-            return false;
+//            Log.e("", "file size not enough");
+            return null;
         }
         int len = Integer.parseInt(new String(bytes).trim());
         bytes = new byte[len];
         r = instream.read(bytes);
         if(r != bytes.length){
-            Log.e("", "readRecord failed, record bytes not enough");
-            return false;
+//            Log.e("", "readRecord failed, record bytes not enough");
+            return null;
         }
-        JSONObject j = JSON.parseObject(new String(bytes, "UTF-8"));
-        id = j.getString("id");
-        title = j.getString("title");
-        published = j.getLongValue("published");
-        s_published = j.getString("s_published");
-        yearmonth = j.getString("yearmonth");
-        author = j.getString("author");
-        href = j.getString("href");
-        streamid = j.getString("streamid");
-        filepos = j.getLong("filepos");
-        return true;
+        JSONObject j = JSON.parseObject(new String(bytes, 0, bytes.length-1, "UTF-8"));
+        FeedItem fi = new FeedItem();
+        fi.id = j.getString("id");
+        fi.title = j.getString("title");
+        fi.published = j.getLongValue("published");
+        fi.s_published = j.getString("s_published");
+        fi.yearmonth = j.getString("yearmonth");
+        fi.author = j.getString("author");
+        fi.href = j.getString("href");
+        fi.streamid = j.getString("streamid");
+        fi.filepos = j.getLong("filepos");
+        return fi;
     }
 }

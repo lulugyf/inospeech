@@ -1,6 +1,7 @@
 package com.laog.test1.db;
 
 import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
@@ -19,6 +20,9 @@ public interface FeedItemDao {
     @Query("select * from feeditems")
     public List<FeedItem> getAll();
 
+    @Query("select min(published) as mnp, max(published) as mxp from feeditems")
+    public List<MN> getmn();
+
     @Insert
     public long insert(FeedItem item);
 
@@ -30,6 +34,9 @@ public interface FeedItemDao {
 
     @Query("select count(*) from feeditems")
     public int getCount();
+
+    @Query("delete from feeditems where published<:maxtime")
+    public int deleteByPubTime(long maxtime);
 
     @Query("select substr(s_published, 1, 10) as feeday, count(*) as ct from feeditems group by substr(s_published, 1, 10)")
     public List<State> state();

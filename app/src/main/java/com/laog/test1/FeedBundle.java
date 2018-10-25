@@ -19,6 +19,7 @@ public class FeedBundle {
     private boolean reading;
     private Button bt1;
     private MainActivity act;
+    private volatile FeedItem cur_fi;
 
     private TextToSpeech tts;
     public FeedBundle(TextToSpeech tts, Button bt,  MainActivity act){
@@ -45,8 +46,11 @@ public class FeedBundle {
             tts.stop();
         next();
     }
+    public FeedItem curItem() { return cur_fi; }
 
     public String indicate() {
+        if(lf == null)
+            return "";
         return idx + " / " + lf.size() + "  " + pageidx;
     }
     public void read_or_stop() {
@@ -89,6 +93,7 @@ public class FeedBundle {
             if (reading) {
                 tts.speak(ll.removeFirst(), TextToSpeech.QUEUE_FLUSH, null, "p");
             }
+            this.cur_fi = art;
         }
         return true;
     }

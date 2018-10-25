@@ -1,6 +1,7 @@
 package com.laog.test1;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.arch.persistence.room.Room;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
@@ -25,14 +26,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.laog.test1.db.AppDatabase;
+import com.laog.test1.db.FeedItem;
+import com.laog.test1.demo.Zoomexample;
 import com.laog.test1.inoreader.InoApi;
 import com.laog.test1.util.JsonConf;
 
 import java.util.List;
 import java.util.Locale;
 
+//  https://developer.android.com/guide/topics/ui/dialogs?hl=zh-cn
 
-public final class MainActivity extends Activity implements OnInitListener {
+public final class MainActivity extends Activity implements OnInitListener, OnClickListener {
     private TextToSpeech tts;
     private TextView ed1;
     private TextView tvContent;
@@ -46,8 +50,8 @@ public final class MainActivity extends Activity implements OnInitListener {
     private final String message_type = "gyf.laog.test.SHOW_CONTENT";
     private MainActivity.ReceiveMessages myReceiver;
     private Boolean myReceiverIsRegistered = false;
-    private AppDatabase db;
-    private InoApi inoApi;
+    private volatile AppDatabase db;
+    private volatile InoApi inoApi;
     private JsonConf conf;
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,48 +79,64 @@ public final class MainActivity extends Activity implements OnInitListener {
         tts.setOnUtteranceProgressListener((UtteranceProgressListener) (new MyUtteranceProgressListener()));
 
         bt1 = (Button) findViewById(R.id.button_stop);
-        bt1.setOnClickListener((OnClickListener) (new OnClickListener() {
-            public final void onClick(View it) {
-                if (task != null) task.read_or_stop();
-            }
-        }));
         bt2 = (Button) findViewById(R.id.button_down);
-        bt2.setOnClickListener((OnClickListener) (new OnClickListener() {
-            public final void onClick(View it) {
+
+        myReceiver = new ReceiveMessages();
+    }
+
+    public void showMessage(String title,String Message){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setCancelable(true);
+        builder.setTitle(title);
+        builder.setMessage(Message);
+        builder.show();
+    }
+
+    @Override
+    public final void onClick(View it) {
+        switch(it.getId()){
+            case R.id.button_down:
                 bt2.setEnabled(false);
                 tvContent.setText("downloading...");
                 task.download();
-            }
-        }));
-        findViewById(R.id.button_back).setOnClickListener((OnClickListener) (new OnClickListener() {
-            public final void onClick(View it) {
+                break;
+            case R.id.button_stop:
+                if (task != null) task.read_or_stop();
+                break;
+            case R.id.button_back:
                 if (task != null) task.back();
-            }
-        }));
-        findViewById(R.id.button_forward).setOnClickListener((OnClickListener) (new OnClickListener() {
-            public final void onClick(View it) {
-                if (task != null) task.forward();
-            }
-        }));
-        findViewById(R.id.bt_spdup).setOnClickListener((OnClickListener) (new OnClickListener() {
-            public final void onClick(View it) {
-                speed += 0.1F;
+                break;
+            case R.id.button_forward:
+                if(task != null) task.forward();
+                break;
+            case R.id.bt_spdup:
+            {speed += 0.1F;
                 String s = String.format("%.2f", speed);
                 conf.set(conf.SPEECH_RATE, s);
                 edSpeed.setText(s);
-                tts.setSpeechRate(MainActivity.this.speed);
-            }
-        }));
-        findViewById(R.id.bt_spddown).setOnClickListener((OnClickListener) (new OnClickListener() {
-            public final void onClick(View it) {
-                speed -= 0.1F;
+                tts.setSpeechRate(MainActivity.this.speed); }
+                break;
+            case R.id.bt_spddown:
+            {speed -= 0.1F;
                 String s = String.format("%.2f", speed);
                 conf.set(conf.SPEECH_RATE, s);
                 edSpeed.setText(s);
-                tts.setSpeechRate(MainActivity.this.speed);
+                tts.setSpeechRate(MainActivity.this.speed); }
+                break;
+            case R.id.button_fav:
+                //showMessage("data", "hello world");
+            {
+                FeedItem fi = task.curItem();
+                if(fi == null)
+                    return;
+                Intent myIntent = new Intent(this, Zoomexample.class);
+                myIntent.putExtra("rawContent", fi.rawContent); //Optional parameters
+                myIntent.putExtra("yearMonth", fi.getYearmonth());
+                myIntent.putExtra("articleid", fi.getId());
+                this.startActivity(myIntent);
             }
-        }));
-        myReceiver = new ReceiveMessages();
+                break;
+        }
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -297,13 +317,19 @@ public final class MainActivity extends Activity implements OnInitListener {
         }
 
         protected Boolean doInBackground(Void... voids) {
+            Log.d("----", "doInBackground act="+act);
             try {
-                if (this.act == 0) {
-                    if (db == null)
+                if (act == 0) {
+                    if (db == null) {
                         db = Room.databaseBuilder(getApplicationContext(),
                                 AppDatabase.class, "inofeeds").build();
-                    if (inoApi == null)
-                        inoApi = new InoApi(getFilesDir().getAbsolutePath().toString(), db.feedItemDao(), false);
+
+                    }
+                    if (inoApi == null) {
+                        final String rootDir = getFilesDir().getAbsolutePath().toString();
+                        Log.d("----", "create api dao="+db.feedItemDao() + " rootDir="+rootDir);
+                        inoApi = new InoApi(rootDir, db.feedItemDao(), false);
+                    }
                     lf = inoApi.loadnew();
                 } else if (this.act == 1) {
                     lf = inoApi.loadold();
@@ -312,7 +338,7 @@ public final class MainActivity extends Activity implements OnInitListener {
                 }else if(act == 3)
                     content = inoApi.state();
                 else if(act == 4)
-                    inoApi.archive(getExternalFilesDir("arch").getAbsolutePath());
+                    content = inoApi.archive(getExternalFilesDir("arch").getAbsolutePath());
                 else if(act == 5)
                     content = inoApi.backup(MainActivity.this.getExternalFilesDir("back").getAbsolutePath());
             } catch (Exception var4) {

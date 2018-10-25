@@ -55,7 +55,7 @@ public class Http {
     private BasicCookieStore cookieStore;
     private String cookie_file = "d:/tmp/haodoo/cookies.obj";
     private DefaultCookieSpec cookieSpec = new DefaultCookieSpec();
-    private String baseDir = "d:/tmp/haodoo/wisdom/";
+    private String baseDir = "d:/tmp/haodoo/history/";
 //    private boolean cookieChg = false;
 
     private String start_url = "";
@@ -138,8 +138,8 @@ public class Http {
     }
     private void test1() throws Exception {
         // "http://www.haodoo.net/?M=hd&P=history"
-        String[] urls = new String[]{ "http://www.haodoo.net/?M=hd&P=wisdom", "http://www.haodoo.net/?M=hd&P=wisdom-1", "http://www.haodoo.net/?M=hd&P=wisdom-2", "http://www.haodoo.net/?M=hd&P=wisdom-3",
-        "http://www.haodoo.net/?M=hd&P=wisdom-4", "http://www.haodoo.net/?M=hd&P=wisdom-5", "http://www.haodoo.net/?M=hd&P=wisdom-6"};
+        String[] urls = new String[]{ "http://www.haodoo.net/?M=hd&P=history", "http://www.haodoo.net/?M=hd&P=history-1",
+        "http://www.haodoo.net/?M=hd&P=history-2", "http://www.haodoo.net/?M=hd&P=history-3"};
         String baseUrl = "http://www.haodoo.net/";
         String fileList = listFiles();
         for(String u: urls) {

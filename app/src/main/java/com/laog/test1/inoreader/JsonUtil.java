@@ -1,5 +1,7 @@
 package com.laog.test1.inoreader;
 
+import android.util.Log;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -133,6 +135,10 @@ public class JsonUtil {
 	public List<FeedItem> parseStream(String content) throws Exception {
 		continuation = null;
 		JSONObject jo = JSON.parseObject(content);
+		if(jo == null){
+			Utils.log(" json parse failed:"+content);
+			return null;
+		}
 		JSONArray ja = jo.getJSONArray("items");
 		if(ja.size() == 0)
 			return null;

@@ -1,5 +1,10 @@
 package com.laog.test1.util;
 
+import android.util.Log;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -26,7 +31,7 @@ public final class TextUtil {
         return ret;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main111(String[] args) throws Exception {
         String line = "<font color=\"CC0000\">茂呂美耶</font>\n" +
                 "<a class=s href=\"?M=book&P=15E2\">【物語日本】</a><a class=s href=\"?M=book&P=15E9\">【江戶日本】</a><br>\n" +
                 "<a class=s href=\"?M=book&P=15I2\">【平安日本】</a><a class=s href=\"?M=book&P=15K7\">【傳說日本】</a><a class=s href=\"?M=book&P=15M5\">【戰國日本】</a><br>\n" +
@@ -53,5 +58,40 @@ public final class TextUtil {
         }
 
 
+    }
+
+    public static void main(String[] args) throws Exception {
+//        getLastDayOfLastMonth();
+        String smon = getLastMonthStr(null);
+        System.out.println(smon);
+        smon = getLastMonthStr(smon);
+        System.out.println(smon);
+        smon = getLastMonthStr(smon);
+        System.out.println(smon);
+    }
+
+    public static long getLastDayOfLastMonth() {
+        Calendar cl = Calendar.getInstance();
+        cl.set(Calendar.DATE, 1);
+        cl.set(Calendar.HOUR, 23);
+        cl.set(Calendar.MINUTE, 59);
+        cl.set(Calendar.SECOND, 59);
+        cl.add(Calendar.DATE, -1);
+//        System.out.println(cl.toString());
+        return cl.getTimeInMillis()/1000;
+    }
+    private static SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+    public static String getLastMonthStr(String l) {
+        Calendar cl = Calendar.getInstance();
+//        System.out.println("cur====" + sdf.format(cl.getTime()));
+        if(l != null) {
+            String[] x = l.split("-");
+            cl.set(Calendar.YEAR, Integer.parseInt(x[0]));
+            cl.set(Calendar.MONTH, Integer.parseInt(x[1])-1);
+        }
+//        System.out.println("====" + sdf.format(cl.getTime()));
+        cl.add(Calendar.MONTH, -1);
+//        System.out.println("====" + sdf.format(cl.getTime()));
+        return sdf.format(cl.getTime()).substring(0, 7);
     }
 }
