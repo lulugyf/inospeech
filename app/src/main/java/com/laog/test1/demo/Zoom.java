@@ -256,7 +256,8 @@ public class Zoom extends AppCompatImageView {
         float scale;
         float scaleX =  width / bmWidth;
         float scaleY = height / bmHeight;
-        scale = Math.min(scaleX, scaleY);
+        scale = Math.max(scaleX, scaleY);  // min
+        height = bmHeight*scale;
         matrix.setScale(scale, scale);
         setImageMatrix(matrix);
         saveScale = 1f;
@@ -274,6 +275,8 @@ public class Zoom extends AppCompatImageView {
         right = width * saveScale - width - (2 * redundantXSpace * saveScale);
         bottom = height * saveScale - height - (2 * redundantYSpace * saveScale);
         setImageMatrix(matrix);
+
+        setMeasuredDimension((int)width, (int)height);
     }
 
 }
