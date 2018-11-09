@@ -6,6 +6,7 @@ import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
@@ -19,7 +20,7 @@ import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-@Entity(tableName = "feeditems", indices = {@Index("published")})
+@Entity(tableName = "feeditems", indices = {@Index("published"), @Index("fav")})
 public class FeedItem {
     @PrimaryKey
     @ColumnInfo(name="itemid")
@@ -49,6 +50,10 @@ public class FeedItem {
 
     @ColumnInfo(name="filepos")
     private long filepos;  //文件开始的位置
+
+    @Nullable
+    @ColumnInfo(name="fav")
+    private String fav;  //文件开始的位置
 
     @Ignore
     public String content;
@@ -128,6 +133,14 @@ public class FeedItem {
         this.filepos = filepos;
     }
 
+    public String getFav() {
+        return fav;
+    }
+
+    public void setFav(String fav) {
+        this.fav = fav;
+    }
+
     private static final SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd HH:mm:SS");
     public static FeedItem fromJSON(JSONObject j) throws JSONException {
         final FeedItem f = new FeedItem();
@@ -192,6 +205,7 @@ public class FeedItem {
         j.put("href", href);
         j.put("streamid", streamid);
         j.put("filepos", filepos);
+        j.put("fav", fav);
         byte[] bytes = j.toJSONString().getBytes("UTF-8");
         outstream.write(String.format("% 8d", bytes.length+1).getBytes());
         outstream.write(bytes);
@@ -222,6 +236,7 @@ public class FeedItem {
         fi.href = j.getString("href");
         fi.streamid = j.getString("streamid");
         fi.filepos = j.getLong("filepos");
+        fi.fav = j.containsKey("fav") ? j.getString("fav") : "";
         return fi;
     }
 }

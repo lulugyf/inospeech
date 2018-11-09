@@ -165,19 +165,29 @@ public class Article implements Comparable<Article>{
         }
     }
 
-    private static void parseImage(Node node, List<String> imgs) {
-		if("IMG".equals(node.getNodeName())){
+    private static void parseImage(Node node, List<String> imgs, StringBuilder sb) {
+		final String nname = node.getNodeName();
+		if("IMG".equals(nname)){
 			NamedNodeMap nn = node.getAttributes();
 			if(nn != null){
 				Node att = nn.getNamedItem("src");
-				if(att != null)
-					imgs.add(att.getNodeValue());
+				if(att != null) {
+					final String imgsrc = att.getNodeValue();
+					if(sb.length() > 0) {
+						imgs.add("T" + sb.toString());
+						sb.delete(0, sb.length());
+					}
+					imgs.add(imgsrc);
+				}
 			}
 			return;
+		}else if("#text".equals(nname)){
+			String val = node.getNodeValue().trim();
+			sb.append(val).append('\n');
 		}
 		Node child = node.getFirstChild();
 		while (child != null) {
-			parseImage(child, imgs);
+			parseImage(child, imgs, sb);
 			child = child.getNextSibling();
 		}
 	}
@@ -186,7 +196,10 @@ public class Article implements Comparable<Article>{
 		DOMParser parser = new DOMParser();
 		parser.parse(src);
 		List<String> ret = new LinkedList<>();
-		parseImage(parser.getDocument(), ret);
+		StringBuilder sb = new StringBuilder();
+		parseImage(parser.getDocument(), ret, sb);
+		if(sb.length() > 0)
+			ret.add("T"+sb.toString());
 		return ret;
 	}
 

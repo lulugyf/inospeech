@@ -40,4 +40,7 @@ public interface FeedItemDao {
 
     @Query("select substr(s_published, 1, 10) as feeday, count(*) as ct from feeditems group by substr(s_published, 1, 10)")
     public List<State> state();
+
+    @Query("select * from feeditems where fav=1 order by published desc limit :limit_start, :pagesize")
+    public List<FeedItem> listFav(int limit_start, int pagesize);
 }

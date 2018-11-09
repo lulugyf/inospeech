@@ -81,8 +81,9 @@ public class FeedBundle {
             }
             FeedItem art = lf.get(idx);
             idx += 1;
-            content = art.getTitle() + "\n\n" + art.getAuthor() + " " + art.getS_published() +"\n\n" + art.content;
-            act.sendMessage();
+            final String fav = "1".equals(art.getFav()) ? " [FAV]" : "";
+            content = art.getTitle() + fav+"\n\n" + art.getAuthor() + " " + art.getS_published() +"\n\n" + art.content;
+            act.sendMessage();  //发送广播消息, 更新gui
             Log.d("", "article: "+art.getS_published() + " " + art.getTitle());
             ll.clear();
             ll.add("标题");

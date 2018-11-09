@@ -31,6 +31,13 @@ public class Zoomexample extends Activity {
     private int idHash;
 
     @Override
+    protected void onDestroy() {
+        if(task != null)
+            task.cancel(true);
+        super.onDestroy();
+    }
+
+    @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
@@ -89,7 +96,8 @@ public class Zoomexample extends Activity {
             List<String> imgs = Article.parseImageLinks(rawContent);
             if(imgs != null) {
                 tv.setText("loading images "+imgs.size());
-                new FetchTask().execute(imgs);
+                task = new FetchTask();
+                task.execute(imgs);
             }else{
                 tv.setText("no images found!!");
             }
@@ -99,18 +107,32 @@ public class Zoomexample extends Activity {
 //        File file = new File(basePath,"demo2.png");
 //        z.setImageBitmap(BitmapFactory.decodeFile(file.getAbsolutePath()));
     }
+    private FetchTask task = null;
 
     private class FetchTask extends AsyncTask<List<String>, String, Boolean> {
         private volatile String msg;
 
         protected void onProgressUpdate(String... values) {
-            Zoom z1 = new Zoom(Zoomexample.this, null);
-            z1.setImageBitmap(BitmapFactory.decodeFile(values[0]));
+            String fpath = values[0];
+            if(fpath != null) {
+                Zoom z1 = new Zoom(Zoomexample.this, null);
+                try {
+                    z1.setImageBitmap(BitmapFactory.decodeFile(fpath));
+                }catch(Exception ex){
+                    new File(fpath).delete(); // 大概文件没有下载完, 就删除好了, 下次可以再下
+                }
 //            layout.addView(z1, (int)z1.getOrigWidth(), (int)z1.getOrigHeight());
-            LayoutParams LParams = new LayoutParams(LayoutParams.MATCH_PARENT, (int)z1.getOrigHeight());
-            layout.addView(z1, LParams);
-            if(msg != null)
-                tv.setText(msg);
+                LayoutParams LParams = new LayoutParams(LayoutParams.MATCH_PARENT, (int) z1.getOrigHeight());
+                layout.addView(z1, LParams);
+                if (msg != null)
+                    tv.setText(msg);
+            }else{
+                String text = values[1];
+                LayoutParams LParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+                TextView tv = new TextView(Zoomexample.this);
+                tv.setText(text);
+                layout.addView(tv, LParams);
+            }
         }
 
         protected Boolean doInBackground(List<String>... voids) {
@@ -118,6 +140,12 @@ public class Zoomexample extends Activity {
             int total = voids[0].size();
             int nn = 0;
             for(String imglink: voids[0]) {
+                if(isCancelled())
+                    break;
+                if(imglink.charAt(0) == 'T'){
+                    publishProgress(null, imglink.substring(1));
+                    continue;
+                }
                 String fname = imglink.substring(imglink.lastIndexOf('/')+1);
                 nn ++;
                 msg = "loaded images: "+nn + " / " + total;
@@ -130,8 +158,13 @@ public class Zoomexample extends Activity {
                     continue;
                 }
                 try {
-                    n.get(imglink, fpath);
-                    if(f1.exists()){
+                    n.get(imglink, fpath+".tmp");
+                    File ftmp = new File(fpath+".tmp"); //下载到临时文件名中,  下载成功后, 再更名到最终的文件名
+                    if(ftmp.exists()) {
+                        if (f1.exists()) {
+                            f1.delete();
+                        }
+                        ftmp.renameTo(f1);
                         this.publishProgress(fpath);
                     }
                 } catch (Exception e) {

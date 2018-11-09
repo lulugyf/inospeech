@@ -2,7 +2,9 @@ package com.laog.test1;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.arch.persistence.db.SupportSQLiteDatabase;
 import android.arch.persistence.room.Room;
+import android.arch.persistence.room.migration.Migration;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -15,6 +17,7 @@ import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.TextToSpeech.OnInitListener;
+import android.support.annotation.NonNull;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
@@ -22,10 +25,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.laog.test1.db.AppDatabase;
+import com.laog.test1.db.FavDBHelper;
 import com.laog.test1.db.FeedItem;
 import com.laog.test1.demo.Zoomexample;
 import com.laog.test1.inoreader.InoApi;
@@ -53,6 +58,7 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
     private volatile AppDatabase db;
     private volatile InoApi inoApi;
     private JsonConf conf;
+    private ImageButton btFav;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +66,7 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
         this.setContentView(R.layout.activity_main);
 
         ed1 = (TextView) findViewById(R.id.textView2);
+        btFav = (ImageButton)findViewById(R.id.button_fav);
         tvContent = (TextView) findViewById(R.id.tv_content);
         tvContent.setMovementMethod(new ScrollingMovementMethod());
 //        tvContent.setTextIsSelectable(true);
@@ -95,12 +102,12 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
     @Override
     public final void onClick(View it) {
         switch(it.getId()){
-            case R.id.button_down:
+            case R.id.button_update: // button_down
                 bt2.setEnabled(false);
                 tvContent.setText("downloading...");
                 task.download();
                 break;
-            case R.id.button_stop:
+            case R.id.button_speech: //button_stop
                 if (task != null) task.read_or_stop();
                 break;
             case R.id.button_back:
@@ -123,7 +130,7 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
                 edSpeed.setText(s);
                 tts.setSpeechRate(MainActivity.this.speed); }
                 break;
-            case R.id.button_fav:
+            case R.id.button_img:
                 //showMessage("data", "hello world");
             {
                 FeedItem fi = task.curItem();
@@ -134,7 +141,24 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
                 myIntent.putExtra("yearMonth", fi.getYearmonth());
                 myIntent.putExtra("articleid", fi.getId());
                 this.startActivity(myIntent);
+                break;
             }
+            case R.id.button_fav:
+            {
+                final FeedItem fi = task.curItem();
+                if(fi != null) {
+                    fi.setFav(("1".equals(fi.getFav()) ) ? "0": "1" );
+                    new AsyncTask<Void, Void, Boolean>() {
+                        protected void onPostExecute(Boolean aBoolean) {
+                            btFav.setImageResource((!"1".equals(fi.getFav())) ? R.drawable.ic_favno : R.drawable.ic_favyes);
+                        }
+                        protected Boolean doInBackground(Void... voids) {
+                            db.feedItemDao().updateItem(fi);
+                            return null;
+                        }
+                    }.execute();
+                }
+                }
                 break;
         }
     }
@@ -219,7 +243,7 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
 
     public final void sendMessage() {
         Intent i = new Intent(this.message_type);
-        this.sendBroadcast(i);
+        this.sendBroadcast(i); //发送广播, 更新gui
     }
 
     public void onInit(int status) {
@@ -274,17 +298,20 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
         Toast.makeText((Context) this, (CharSequence) msg, Toast.LENGTH_LONG).show();
     }
 
-
+    // 收到广播后, 更新gui元素
     private final class ReceiveMessages extends BroadcastReceiver {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (message_type.equals(action)) {
-                if (MainActivity.this.task == null) {
+                if (task == null) {
                     return;
                 }
                 tvContent.setText(task.getContent());
                 tvContent.scrollTo(0, 0);
                 ed1.setText(task.indicate());
+                FeedItem fi = task.curItem();
+                if(fi != null)
+                    btFav.setImageResource((!"1".equals(fi.getFav())) ? R.drawable.ic_favno : R.drawable.ic_favyes);
             }
         }
     }
@@ -322,8 +349,9 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
                 if (act == 0) {
                     if (db == null) {
                         db = Room.databaseBuilder(getApplicationContext(),
-                                AppDatabase.class, "inofeeds").build();
-
+                                AppDatabase.class, "inofeeds")
+                                .addMigrations(FavDBHelper.MIGRATION_1_2)
+                                .build();
                     }
                     if (inoApi == null) {
                         final String rootDir = getFilesDir().getAbsolutePath().toString();
