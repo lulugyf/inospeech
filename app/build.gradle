@@ -6,7 +6,7 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion "28.0.1"
+    buildToolsVersion "28.0.3"
     defaultConfig {
         applicationId "com.laog.test1"
         minSdkVersion 23
@@ -23,6 +23,11 @@ android {
     }
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -41,16 +46,16 @@ dependencies {
     //            url "http://172.21.10.40:9092/nexus/content/repositories/central"
     //        }
     //    }
+    implementation project(':extractor')
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    //    implementation 'com.alibaba:fastjson:1.2.47'
-    //    implementation 'net.sourceforge.nekohtml:nekohtml:1.9.22'
-    //    implementation 'cz.msebera.android:httpclient:4.4.1.2'  //https://github.com/smarek/httpclient-android
+
     implementation files('libs/httpclient-4.4.1.2.jar')
-    implementation files('libs/fastjson-1.2.47.jar')
+    implementation files('libs/fastjson-1.2.51.jar')
     implementation files('libs/nekohtml-1.9.22.jar')
     implementation files('libs/xercesImpl-2.11.0.jar')
     implementation files('libs/xml-apis-1.4.01.jar')
@@ -60,6 +65,9 @@ dependencies {
     implementation 'me.relex:photodraweeview:1.1.0'
     implementation 'com.facebook.fresco:fresco:0.12.0'
     implementation 'com.android.support:design:28.0.0'
+
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.4'
 }
 repositories {
     mavenCentral()

@@ -42,7 +42,7 @@ import java.util.Locale;
 //  https://developer.android.com/guide/topics/ui/dialogs?hl=zh-cn
 
 public final class MainActivity extends Activity implements OnInitListener, OnClickListener {
-    private TextToSpeech tts;
+//    private TextToSpeech tts;
     private TextView ed1;
     private TextView tvContent;
     private TextView edSpeed;
@@ -62,7 +62,7 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.requestWindowFeature(1);
+//        this.requestWindowFeature(1); //no-titlebar
         this.setContentView(R.layout.activity_main);
 
         ed1 = (TextView) findViewById(R.id.textView2);
@@ -82,13 +82,28 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
             speed = Float.parseFloat(sspeed);
         }
 
-        tts = new TextToSpeech(this.getApplicationContext(), (OnInitListener) this);
-        tts.setOnUtteranceProgressListener((UtteranceProgressListener) (new MyUtteranceProgressListener()));
-
         bt1 = (Button) findViewById(R.id.button_stop);
         bt2 = (Button) findViewById(R.id.button_down);
 
         myReceiver = new ReceiveMessages();
+
+        task = new FeedBundle( bt1, this);
+        new FetchTask(0).execute();
+    }
+
+    public void onInit(int status) {
+        int ret = task.onTtsInit(status, speed);
+        if(ret == 0) {
+            //task.setSpeechSpeed(speed);
+        }else if(ret == 2){
+            Intent installTTSIntent = new Intent();
+            installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+            startActivity(installTTSIntent);
+        }else if(ret == 1){
+            tvContent.setText("ERROR:  LANG_NOT_SUPPORTED");
+        }else{
+            tvContent.setText("tts engine init failed:"+ret + " status:"+status);
+        }
     }
 
     public void showMessage(String title,String Message){
@@ -121,14 +136,18 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
                 String s = String.format("%.2f", speed);
                 conf.set(conf.SPEECH_RATE, s);
                 edSpeed.setText(s);
-                tts.setSpeechRate(MainActivity.this.speed); }
+                task.setSpeechSpeed(speed);
+//                tts.setSpeechRate(MainActivity.this.speed);
+                }
                 break;
             case R.id.bt_spddown:
             {speed -= 0.1F;
                 String s = String.format("%.2f", speed);
                 conf.set(conf.SPEECH_RATE, s);
                 edSpeed.setText(s);
-                tts.setSpeechRate(MainActivity.this.speed); }
+                task.setSpeechSpeed(speed);
+//                tts.setSpeechRate(MainActivity.this.speed);
+                }
                 break;
             case R.id.button_img:
                 //showMessage("data", "hello world");
@@ -160,6 +179,13 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
                 }
                 }
                 break;
+            case R.id.button_favlist:
+            {
+                Intent myIntent = new Intent(this, FavListActivity.class);
+                myIntent.putExtra("articleid", "hello");
+                this.startActivity(myIntent);
+            }
+                break;
         }
     }
 
@@ -184,6 +210,13 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
                 break;
             case R.id.mn_readclip:
                 readClipBoard();
+                break;
+            case R.id.mn_youtube:
+            {
+                Intent myIntent = new Intent(this, YTListActivity.class);
+                myIntent.putExtra("articleid", "hello");
+                this.startActivity(myIntent);
+            }
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -220,12 +253,7 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
             return;
         }
         tvContent.setText(data);
-        if(data.length() > tts.getMaxSpeechInputLength()){
-            data = data.substring(0, tts.getMaxSpeechInputLength());
-        }
-        if(tts.isSpeaking())
-            tts.stop();
-        tts.speak(data, TextToSpeech.QUEUE_FLUSH, null, null); // utteranceId is null not trigger on onDone
+        task.readText(data);
     }
 
     public final boolean isExternalStorageWritable() {
@@ -246,24 +274,6 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
         this.sendBroadcast(i); //发送广播, 更新gui
     }
 
-    public void onInit(int status) {
-        if (status != TextToSpeech.ERROR) {
-            //               tts.setLanguage(Locale.UK);
-            int result = tts.setLanguage(Locale.CHINESE);
-            if (result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                tvContent.setText("ERROR:  LANG_NOT_SUPPORTED");
-            } else if (result == TextToSpeech.LANG_MISSING_DATA) {
-                Intent installTTSIntent = new Intent();
-                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installTTSIntent);
-            } else {
-                isInit = true;
-                tts.setSpeechRate(speed);
-            }
-            task = new FeedBundle(tts, bt1, this);
-            new FetchTask(0).execute();
-        }
-    }
 
     protected void onResume() {
         super.onResume();
@@ -284,12 +294,14 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
     }
 
     protected void onDestroy() {
-        if (tts.isSpeaking())
-            tts.stop();
-        tts.shutdown();
+//        if (tts.isSpeaking())
+//            tts.stop();
+//        tts.shutdown();
         Log.d("", "destroy, tts shutdown!");
         if (db != null)
             db.close();
+        if(task != null)
+            task.onDestroy();
 
         super.onDestroy();
     }
@@ -315,8 +327,9 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
             }
         }
     }
+    protected MyUtteranceProgressListener myUtteranceProgressListener = new MyUtteranceProgressListener();
 
-    private final class MyUtteranceProgressListener extends UtteranceProgressListener {
+    protected final class MyUtteranceProgressListener extends UtteranceProgressListener {
         public void onStart(String utteranceId) {     }
         public void onDone(String utteranceId) {
             if (task != null) {

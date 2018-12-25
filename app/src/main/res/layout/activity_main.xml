@@ -9,7 +9,9 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="250dp"
+        tools:layout_editor_absoluteY="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -71,14 +73,6 @@
                 android:onClick="onClick"
                 android:src="@drawable/ic_update" />
 
-            <ImageButton
-                android:id="@+id/button_speech"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:onClick="onClick"
-                android:src="@drawable/ic_speech" />
-
             <Button
                 android:id="@+id/button_stop"
                 android:layout_width="wrap_content"
@@ -89,20 +83,12 @@
                 android:visibility="gone" />
 
             <ImageButton
-                android:id="@+id/button_back"
+                android:id="@+id/button_speech"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:onClick="onClick"
-                android:src="@drawable/ic_action_back" />
-
-            <ImageButton
-                android:id="@+id/button_forward"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:onClick="onClick"
-                android:src="@drawable/ic_action_forward" />
+                android:src="@drawable/ic_speech" />
 
             <ImageButton
                 android:id="@+id/button_fav"
@@ -128,6 +114,22 @@
                 android:onClick="onClick"
                 android:src="@drawable/ic_img" />
 
+            <ImageButton
+                android:id="@+id/button_back"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:onClick="onClick"
+                android:src="@drawable/ic_action_back" />
+
+            <ImageButton
+                android:id="@+id/button_forward"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:onClick="onClick"
+                android:src="@drawable/ic_action_forward" />
+
         </LinearLayout>
 
         <TextView
@@ -136,8 +138,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:maxLines="500"
-            android:scrollbars="vertical"
-            />
+            android:scrollbars="vertical" />
         <!-- android:enabled="true"
             android:textIsSelectable="true"
             android:focusable="true"

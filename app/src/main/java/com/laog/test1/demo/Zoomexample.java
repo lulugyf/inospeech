@@ -146,6 +146,9 @@ public class Zoomexample extends Activity {
                     publishProgress(null, imglink.substring(1));
                     continue;
                 }
+                if(imglink.indexOf("www.inoreader.com/adv") > 0){
+                    nn ++; continue;
+                }
                 String fname = imglink.substring(imglink.lastIndexOf('/')+1);
                 nn ++;
                 msg = "loaded images: "+nn + " / " + total;

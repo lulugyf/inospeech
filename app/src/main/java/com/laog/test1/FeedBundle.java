@@ -2,6 +2,7 @@ package com.laog.test1;
 
 import android.content.Intent;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 import android.widget.Button;
 
@@ -9,6 +10,9 @@ import com.laog.test1.db.FeedItem;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+
+// https://stackoverflow.com/questions/2716686/android-set-imagebutton-as-toggle
 
 public class FeedBundle {
     private String content;
@@ -21,20 +25,66 @@ public class FeedBundle {
     private MainActivity act;
     private volatile FeedItem cur_fi;
 
+     public void setSpeechSpeed(float speed) { if(tts != null) tts.setSpeechRate(speed); }
+
     private TextToSpeech tts;
-    public FeedBundle(TextToSpeech tts, Button bt,  MainActivity act){
+    public FeedBundle(Button bt,  MainActivity act){
         this.act = act;
-        this.tts = tts;
+//        this.tts = tts;
         bt1 = bt;
     }
-
+    /**
+     *
+     * @param status
+     * @return 1-"ERROR:  LANG_NOT_SUPPORTED"  2-need install tts-data 3-ERROR  0- ok
+     */
+    public int onTtsInit(int status, float speed) {
+        if (status != TextToSpeech.ERROR) {
+            //               tts.setLanguage(Locale.UK);
+            int result = tts.setLanguage(Locale.CHINESE);
+            if (result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                return 1; //ERROR:  LANG_NOT_SUPPORTED
+            } else if (result == TextToSpeech.LANG_MISSING_DATA) {
+                Intent installTTSIntent = new Intent();
+                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                return 2;
+            }
+            // successfully inited tts engine
+            tts.setSpeechRate(speed);
+            if(reading)
+                next();
+            return 0;
+        }else{
+            return 3;
+        }
+    }
+    protected void readText(String data) {
+        if(tts == null)
+            startTts();
+        if(tts.isSpeaking())
+            tts.stop();
+        if(data.length() > tts.getMaxSpeechInputLength()){
+            data = data.substring(0, tts.getMaxSpeechInputLength());
+        }
+        if(tts.isSpeaking())
+            tts.stop();
+        tts.speak(data, TextToSpeech.QUEUE_FLUSH, null, null); // utteranceId is null not trigger on onDone
+    }
+    private void startTts() {
+        if(tts != null){
+            tts.shutdown();
+            tts = null;
+        }
+        tts = new TextToSpeech(act.getApplicationContext(), (TextToSpeech.OnInitListener) act);
+        tts.setOnUtteranceProgressListener(act.myUtteranceProgressListener);
+    }
     public String getContent(){ return content; }
     public void back() {
         if (lf == null) return;
         if (idx <= 1) return;
                 ll.clear();
         idx -= 2;
-        if (tts.isSpeaking())
+        if (tts != null && tts.isSpeaking())
             tts.stop();
         next();
     }
@@ -42,7 +92,7 @@ public class FeedBundle {
         if (lf == null) return;
                 //if (idx >= lf.size) return
         ll.clear();
-        if (tts.isSpeaking())
+        if (tts != null && tts.isSpeaking())
             tts.stop();
         next();
     }
@@ -55,14 +105,18 @@ public class FeedBundle {
     }
     public void read_or_stop() {
         if (reading) {
+            if(tts == null) return;
             if (tts.isSpeaking())
                 tts.stop();
+            tts.shutdown();
+            tts = null;
             reading = false;
-            bt1.setText(R.string.str_start);
+//            bt1.setText(R.string.str_start);
         } else {
+            startTts();
             reading = true;
-            bt1.setText(R.string.str_stop);
-            next();
+//            bt1.setText(R.string.str_stop);
+//            next();
         }
     }
     /**
@@ -107,5 +161,14 @@ public class FeedBundle {
         idx = 0;
         lf = v;
         next();
+    }
+
+    public void onDestroy() {
+        if(tts != null) {
+            if(tts.isSpeaking())
+                tts.stop();
+            tts.shutdown();
+            tts = null;
+        }
     }
 }

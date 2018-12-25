@@ -16,14 +16,19 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".demo.Zoomexample"
-            android:label="@string/title_activity_demo">
+            android:label="@string/title_activity_demo"></activity>
+        <activity
+            android:name=".FavListActivity"
+            android:label="@string/title_activity_fav_list"></activity>
+        <activity
+            android:name=".YTListActivity"
+            android:label="@string/youtube_list">
+
         </activity>
     </application>
 

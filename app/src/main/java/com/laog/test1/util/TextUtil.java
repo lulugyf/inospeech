@@ -2,6 +2,15 @@ package com.laog.test1.util;
 
 import android.util.Log;
 
+import java.io.CharArrayWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -93,5 +102,38 @@ public final class TextUtil {
         cl.add(Calendar.MONTH, -1);
 //        System.out.println("====" + sdf.format(cl.getTime()));
         return sdf.format(cl.getTime()).substring(0, 7);
+    }
+
+    public static String fileToString(String fname) throws Exception {
+        return fileToString(fname, "UTF-8");
+    }
+    public static String fileToString(String fname, String charset) throws Exception {
+        InputStream instream = new FileInputStream(fname);
+        if(charset == null)
+            charset = "UTF-8";
+        final Reader reader = new InputStreamReader(instream, charset);
+        final CharArrayWriter buffer = new CharArrayWriter(1024);
+        final char[] tmp = new char[1024];
+        int l;
+        while((l = reader.read(tmp)) != -1) {
+            buffer.write(tmp, 0, l);
+        }
+        return buffer.toString();
+    }
+
+    public static void stringToFile(String fname, String content) throws Exception {
+        stringToFile(fname, content, "UTF-8");
+    }
+    public static void stringToFile(String fname, String content, String charset) throws Exception {
+        final OutputStream outstream = new FileOutputStream(fname);
+        try {
+            if(charset == null)
+                charset = "UTF-8";
+            final Writer writer = new OutputStreamWriter(outstream, charset);
+            writer.append(content);
+            writer.close();
+        }finally {
+            outstream.close();
+        }
     }
 }
