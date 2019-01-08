@@ -9,7 +9,9 @@
         <item name="windowNoTitle">false</item>
     </style>
 
-    <style name="_AppTheme" parent="Theme.AppCompat.Light.DarkActionBar" />
+    <style name="_AppTheme" parent="Theme.AppCompat.Light.DarkActionBar" >
+        <item name="selectableItemBackground">?android:attr/selectableItemBackground</item>
+    </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 

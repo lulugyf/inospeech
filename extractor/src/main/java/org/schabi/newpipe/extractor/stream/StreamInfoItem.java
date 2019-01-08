@@ -26,7 +26,7 @@ import org.schabi.newpipe.extractor.InfoItem;
  * Info object for previews of unopened videos, eg search results, related videos
  */
 public class StreamInfoItem extends InfoItem {
-    private final StreamType streamType;
+    private StreamType streamType;
 
     private String uploaderName;
     private String uploadDate;
@@ -39,7 +39,9 @@ public class StreamInfoItem extends InfoItem {
         super(InfoType.STREAM, serviceId, url, name);
         this.streamType = streamType;
     }
+    public StreamInfoItem() {}
 
+    public void setStreamType(StreamType s) { streamType = s; }
     public StreamType getStreamType() {
         return streamType;
     }

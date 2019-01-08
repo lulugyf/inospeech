@@ -128,7 +128,7 @@ public class DownloadRunnable implements Runnable {
     private void notifyError() {
         synchronized (mMission) {
             mMission.notifyError(DownloadMission.ERROR_SERVER_UNSUPPORTED);
-            mMission.pause();
+//            mMission.pause();
         }
     }
 

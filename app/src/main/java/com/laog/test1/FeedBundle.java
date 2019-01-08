@@ -21,17 +21,15 @@ public class FeedBundle {
     private LinkedList<String> ll = new LinkedList<String>();
     private int pageidx = 0;
     private boolean reading;
-    private Button bt1;
     private MainActivity act;
     private volatile FeedItem cur_fi;
 
      public void setSpeechSpeed(float speed) { if(tts != null) tts.setSpeechRate(speed); }
 
     private TextToSpeech tts;
-    public FeedBundle(Button bt,  MainActivity act){
+    public FeedBundle( MainActivity act){
         this.act = act;
 //        this.tts = tts;
-        bt1 = bt;
     }
     /**
      *

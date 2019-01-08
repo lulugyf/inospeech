@@ -1,0 +1,71 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="5dp"
+    tools:context=".act.ContentAct">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="#2D97CB">
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="64dp"
+            android:layout_height="48dp"
+            android:layout_alignParentLeft="true"
+            android:text="Back" />
+
+
+        <Button
+            android:id="@+id/btn_refresh"
+            android:layout_width="64dp"
+            android:layout_height="48dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="0dp"
+            android:layout_toRightOf="@id/btn_back"
+            android:text="刷新" />
+
+        <TextView
+            android:id="@+id/txt_title"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_toLeftOf="@id/btn_prev"
+            android:layout_toRightOf="@id/btn_refresh"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="what"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_prev"
+            android:layout_width="64dp"
+            android:layout_height="48dp"
+            android:layout_toLeftOf="@id/btn_next"
+            android:text="@string/str_back" />
+        <Button
+            android:id="@+id/btn_next"
+            android:layout_width="64dp"
+            android:layout_height="48dp"
+            android:layout_alignParentRight="true"
+            android:text="@string/str_forward" />
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/btn_icon"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_centerInParent="true"
+        android:text="呵呵"
+        android:visibility="gone" />
+
+    <com.laog.test1.act.MyWebView
+        android:id="@+id/wView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+
+</LinearLayout>

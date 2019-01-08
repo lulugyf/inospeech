@@ -1,1 +1,1 @@
-include ':app', ':timeago-parser', ':extractor'
+include ':app', ':timeago-parser', ':extractor', ':ytdown'

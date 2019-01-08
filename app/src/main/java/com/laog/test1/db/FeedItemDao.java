@@ -17,7 +17,7 @@ public interface FeedItemDao {
     @Query("select * from feeditems where published>=:mintime and published<:maxtime order by published desc limit :pagesize")
     public List<FeedItem> getPage(long mintime, long maxtime, int pagesize) ;
 
-    @Query("select * from feeditems")
+    @Query("select * from feeditems order by published desc")
     public List<FeedItem> getAll();
 
     @Query("select min(published) as mnp, max(published) as mxp from feeditems")

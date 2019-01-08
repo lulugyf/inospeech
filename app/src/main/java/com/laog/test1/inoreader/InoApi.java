@@ -284,7 +284,7 @@ public class InoApi {
 			return null;
 		}
         if(mintime <= 0L)
-            mintime = System.currentTimeMillis() / 1000 - oneday;
+            mintime = dao.findMaxTime() - oneday;
 		List<FeedItem> lst = null;
 		for(int i=0; i<6; i++) {
 			lst = dao.getPage(mintime, pagesize);

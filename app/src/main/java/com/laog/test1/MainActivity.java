@@ -29,11 +29,13 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.laog.test1.act.ContentAct;
 import com.laog.test1.db.AppDatabase;
 import com.laog.test1.db.FavDBHelper;
 import com.laog.test1.db.FeedItem;
 import com.laog.test1.demo.Zoomexample;
 import com.laog.test1.inoreader.InoApi;
+import com.laog.test1.ng.NGMainAct;
 import com.laog.test1.util.JsonConf;
 
 import java.util.List;
@@ -46,8 +48,8 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
     private TextView ed1;
     private TextView tvContent;
     private TextView edSpeed;
-    private Button bt1;
-    private Button bt2;
+//    private Button bt1;
+//    private Button bt2;
     private float speed = 2.5F;
     private boolean isInit;
     private FeedBundle task;
@@ -82,12 +84,12 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
             speed = Float.parseFloat(sspeed);
         }
 
-        bt1 = (Button) findViewById(R.id.button_stop);
-        bt2 = (Button) findViewById(R.id.button_down);
+//        bt1 = (Button) findViewById(R.id.button_stop);
+//        bt2 = (Button) findViewById(R.id.button_down);
 
         myReceiver = new ReceiveMessages();
 
-        task = new FeedBundle( bt1, this);
+        task = new FeedBundle( this);
         new FetchTask(0).execute();
     }
 
@@ -118,7 +120,7 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
     public final void onClick(View it) {
         switch(it.getId()){
             case R.id.button_update: // button_down
-                bt2.setEnabled(false);
+//                bt2.setEnabled(false);
                 tvContent.setText("downloading...");
                 task.download();
                 break;
@@ -181,8 +183,9 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
                 break;
             case R.id.button_favlist:
             {
-                Intent myIntent = new Intent(this, FavListActivity.class);
-                myIntent.putExtra("articleid", "hello");
+//                Intent myIntent = new Intent(this, FavListActivity.class);
+                Intent myIntent = new Intent(this, NGMainAct.class);
+//                myIntent.putExtra("articleid", "hello");
                 this.startActivity(myIntent);
             }
                 break;
@@ -397,7 +400,7 @@ public final class MainActivity extends Activity implements OnInitListener, OnCl
                 if(content != null)
                     tvContent.setText((CharSequence) this.content);
             }
-            bt2.setEnabled(true);
+//            bt2.setEnabled(true);
         }
 
         public final int getAct() {

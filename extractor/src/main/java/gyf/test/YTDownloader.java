@@ -14,10 +14,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Headers;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.internal.http.RealResponseBody;
+import okio.GzipSource;
+import okio.Okio;
 
 public class YTDownloader implements org.schabi.newpipe.extractor.Downloader {
 
@@ -28,17 +33,16 @@ public class YTDownloader implements org.schabi.newpipe.extractor.Downloader {
     private final OkHttpClient client;
 
     private YTDownloader(OkHttpClient.Builder builder) {
-//        Proxy proxyTest = new Proxy(Proxy.Type.HTTP,new InetSocketAddress(proxy_host, proxy_port));
         this.client = builder
-//                .proxy(proxyTest)
+                .addInterceptor(new UnzippingInterceptor())//开启Gzip压缩
                 .readTimeout(30, TimeUnit.SECONDS)
-                //.cache(new Cache(new File(context.getExternalCacheDir(), "okhttp"), 16 * 1024 * 1024))
                 .build();
     }
     private YTDownloader(OkHttpClient.Builder builder, String proxy_host, int proxy_port) {
         Proxy proxyTest = new Proxy(Proxy.Type.HTTP,new InetSocketAddress(proxy_host, proxy_port));
         this.client = builder
                 .proxy(proxyTest)
+                .addInterceptor(new UnzippingInterceptor())//开启Gzip压缩
                 .readTimeout(30, TimeUnit.SECONDS)
                 //.cache(new Cache(new File(context.getExternalCacheDir(), "okhttp"), 16 * 1024 * 1024))
                 .build();
@@ -103,10 +107,11 @@ public class YTDownloader implements org.schabi.newpipe.extractor.Downloader {
      */
     @Override
     public String download(String siteUrl, Localization localization) throws IOException, ReCaptchaException {
-        Map<String, String> requestProperties = new HashMap<>();
-        requestProperties.put("Accept-Language", "zh-CN,zh;q=0.9"); //localization.getLanguage());
-        requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
-        return download(siteUrl, requestProperties);
+//        Map<String, String> requestProperties = new HashMap<>();
+//        requestProperties.put("Accept-Language", "zh-CN,zh;q=0.9"); //localization.getLanguage());
+//        requestProperties.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36");
+//        return download(siteUrl, requestProperties);
+        return download(siteUrl, (Map<String, String>)null);
     }
 
     /**
@@ -138,11 +143,15 @@ public class YTDownloader implements org.schabi.newpipe.extractor.Downloader {
     private ResponseBody getBody(String siteUrl, Map<String, String> customProperties) throws IOException, ReCaptchaException {
         final Request.Builder requestBuilder = new Request.Builder()
                 .method("GET", null).url(siteUrl)
-                .addHeader("User-Agent", USER_AGENT);
+                .addHeader("User-Agent", USER_AGENT)
+                .addHeader("Accept-Language", "en-US,en;q=0.5")
+                .addHeader("Accept-Encoding" , "gzip")
+                ;
 
-        for (Map.Entry<String, String> header : customProperties.entrySet()) {
-            requestBuilder.addHeader(header.getKey(), header.getValue());
-        }
+        if(customProperties != null)
+            for (Map.Entry<String, String> header : customProperties.entrySet()) {
+                requestBuilder.addHeader(header.getKey(), header.getValue());
+            }
 
         if (!Utils.isEmpty(mCookies)) {
             requestBuilder.addHeader("Cookie", mCookies);
@@ -174,7 +183,9 @@ public class YTDownloader implements org.schabi.newpipe.extractor.Downloader {
     @Override
     public String download(String siteUrl) throws IOException, ReCaptchaException {
         Map<String, String> k = new LinkedHashMap<>();
-        return download(siteUrl, k);
+        String ret= download(siteUrl, k);
+//        System.out.println(ret);
+        return ret;
     }
 
 //    private String proxy_host = "127.0.0.1";
@@ -198,4 +209,41 @@ public class YTDownloader implements org.schabi.newpipe.extractor.Downloader {
 //        //HttpsURLConnection con = NetCipher.getHttpsURLConnection(url);
 //        return dl(con);
 //    }
+
+    private class UnzippingInterceptor implements Interceptor {
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Response response = chain.proceed(chain.request());
+            return unzip(response);
+        }
+
+
+            // copied from okhttp3.internal.http.HttpEngine (because is private)
+            private Response unzip(final Response response) throws IOException
+            {
+                if (response.body() == null)
+                {
+                    return response;
+                }
+
+                //check if we have gzip response
+                String contentEncoding = response.headers().get("Content-Encoding");
+
+                //this is used to decompress gzipped responses
+                if (contentEncoding != null && contentEncoding.equals("gzip"))
+                {
+                    Long contentLength = response.body().contentLength();
+                    GzipSource responseBody = new GzipSource(response.body().source());
+                    Headers strippedHeaders = response.headers().newBuilder().build();
+                    return response.newBuilder().headers(strippedHeaders)
+                            .body(new RealResponseBody(response.body().contentType().toString(), contentLength, Okio.buffer(responseBody)))
+                            .build();
+                }
+                else
+                {
+                    return response;
+                }
+            }
+        }
+
 }

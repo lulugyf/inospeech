@@ -23,10 +23,10 @@ package org.schabi.newpipe.extractor;
 import java.io.Serializable;
 
 public abstract class InfoItem implements Serializable {
-    private final InfoType infoType;
-    private final int serviceId;
-    private final String url;
-    private final String name;
+    private InfoType infoType;
+    private int serviceId;
+    private String url;
+    private String name;
     private String thumbnailUrl;
 
     public InfoItem(InfoType infoType, int serviceId, String url, String name) {
@@ -35,6 +35,11 @@ public abstract class InfoItem implements Serializable {
         this.url = url;
         this.name = name;
     }
+    public InfoItem() {}
+    public void setInfoType(InfoType i) {infoType = i;}
+    public void setName(String name) {this.name = name;}
+    public void setUrl(String url) {this.url = url; }
+    public void setServiceId(int i) { serviceId = i; }
 
     public InfoType getInfoType() {
         return infoType;

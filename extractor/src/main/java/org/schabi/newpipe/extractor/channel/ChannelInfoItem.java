@@ -29,6 +29,7 @@ public class ChannelInfoItem extends InfoItem {
     private long streamCount = -1;
 
 
+    public ChannelInfoItem(){}
     public ChannelInfoItem(int serviceId, String url, String name) {
         super(InfoType.CHANNEL, serviceId, url, name);
     }

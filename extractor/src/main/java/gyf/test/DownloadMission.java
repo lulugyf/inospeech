@@ -277,7 +277,7 @@ public class DownloadMission implements Serializable {
         if (done > length) {
             done = length;
         }
-        Log.d(TAG, String.format("finish: %.2f %%", (done*100.0)/length));
+//        Log.d(TAG, String.format("finish: %.2f %%", (done*100.0)/length));
 
         for (WeakReference<MissionListener> ref : mListeners) {
             final MissionListener listener = ref.get();
@@ -325,8 +325,6 @@ public class DownloadMission implements Serializable {
         }catch (Exception e){
             e.printStackTrace();
         }
-
-        deleteThisFromFile();
 
         for (WeakReference<MissionListener> ref : mListeners) {
             final MissionListener listener = ref.get();
@@ -405,46 +403,4 @@ public class DownloadMission implements Serializable {
             }
         }
     }
-
-    public void pause() {
-        if (running) {
-            running = false;
-            recovered = true;
-
-            // TODO: Notify & Write state to info file
-        }
-    }
-
-    /**
-     * Removes the file and the meta file
-     */
-    public void delete() {
-        deleteThisFromFile();
-        new File(location, name).delete();
-    }
-
-    private void readObject(ObjectInputStream inputStream)
-    throws java.io.IOException, ClassNotFoundException
-    {
-        inputStream.defaultReadObject();
-        mListeners = new ArrayList<>();
-    }
-
-    private void deleteThisFromFile() {
-        new File(getMetaFilename()).delete();
-    }
-
-    /**
-     * Get the path of the meta file
-     *
-     * @return the path to the meta file
-     */
-    private String getMetaFilename() {
-        return location + "/" + name + ".giga";
-    }
-
-    public File getDownloadedFile() {
-        return new File(location, name);
-    }
-
 }

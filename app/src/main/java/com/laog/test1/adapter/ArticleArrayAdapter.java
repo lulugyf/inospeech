@@ -12,11 +12,13 @@ import com.laog.test1.R;
 import com.laog.test1.db.FeedItem;
 import com.laog.test1.inoreader.Article;
 
+import java.util.List;
+
 public class ArticleArrayAdapter extends ArrayAdapter<FeedItem>{
     private final Context context;
-    private final FeedItem[] values;
+    private final List<FeedItem> values;
 
-    public ArticleArrayAdapter(Context context, FeedItem[] values) {
+    public ArticleArrayAdapter(Context context, List<FeedItem> values) {
         super(context, R.layout.list_article, values);
         this.context = context;
         this.values = values;
@@ -30,8 +32,8 @@ public class ArticleArrayAdapter extends ArrayAdapter<FeedItem>{
         View rowView = inflater.inflate(R.layout.list_article, parent, false);
         TextView textView = (TextView) rowView.findViewById(R.id.label);
         ImageView imageView = (ImageView) rowView.findViewById(R.id.logo);
-        textView.setText(values[position].getTitle());
-        ((TextView) rowView.findViewById(R.id.date)).setText(values[position].getS_published());
+        textView.setText(values.get(position).getTitle());
+        ((TextView) rowView.findViewById(R.id.date)).setText(values.get(position).getS_published());
 
         /*
         // Change icon based on name

@@ -30,6 +30,15 @@
             android:label="@string/youtube_list">
 
         </activity>
+        <activity
+            android:name=".act.ContentAct"
+            android:label="WebView Test">
+        </activity>
+
+        <activity
+            android:name=".ng.NGMainAct"
+            android:label="News App">
+        </activity>
     </application>
 
 </manifest>

@@ -19,6 +19,8 @@ dependencies {
 
     implementation "com.squareup.okhttp3:okhttp:3.11.0"
 
+    implementation "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
+
 
     testImplementation 'junit:junit:4.12'
 }
